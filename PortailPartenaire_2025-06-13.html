@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail partenaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: 'Inter', sans-serif; /* Using Inter as per instructions */
@@ -31,6 +32,28 @@
             opacity: 0.15; /* Adjust transparency as needed (0.15 to 0.3 is usually good) */
             z-index: -1; /* Place it behind all content */
         }
+
+        .home-button {
+            top: 20px;       /* Marge de 20px depuis le haut */
+            left: 20px;      /* Marge de 20px depuis la gauche */
+            background-color: #007bff; /* Couleur de fond bleue */
+            color: white;      /* Couleur de l'icône blanche */
+            padding: 10px; /* Espacement interne */
+            border-radius: 5px; /* Coins légèrement arrondis */
+            text-decoration: none; /* Supprime le soulignement du lien */
+            font-size: 14px;   /* Taille de l'icône */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Légère ombre pour un effet de profondeur */
+            transition: background-color 0.3s ease; /* Transition douce au survol */
+            z-index: 1000;     /* S'assure que le bouton est au-dessus des autres éléments */
+            display: flex;     /* Pour centrer l'icône si nécessaire */
+            align-items: center; /* Pour centrer l'icône si nécessaire */
+            justify-content: center; /* Pour centrer l'icône si nécessaire */
+        }
+
+        .home-button:hover {
+            background-color: #0056b3; /* Couleur de fond plus foncée au survol */
+        }
+        
         .container {
             background-color: #fff;
             padding: 20px;
@@ -227,6 +250,9 @@
     </style>
 </head>
 <body>
+    <a href="https://gc-hvt.github.io/Synthese/" class="home-button">
+        <i class="fas fa-home"></i>
+    </a>
     <div class="container">
         <h1>Portail partenaire</h1>
         <div class="info-block">
