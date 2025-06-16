@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projets sans réunions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <!-- Chargement de Tailwind CSS pour un style moderne et réactif -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -17,6 +19,28 @@
             min-height: 100vh;
             padding: 2rem; /* Espacement autour du contenu */
             box-sizing: border-box; /* Inclut le padding dans la largeur/hauteur totale */
+        }
+
+            .home-button {
+        position: fixed; /* Fixe le bouton par rapport à la fenêtre de visualisation */
+        top: 20px;       /* Marge de 20px depuis le haut */
+        left: 20px;      /* Marge de 20px depuis la gauche */
+        background-color: #007bff; /* Couleur de fond bleue */
+        color: white;      /* Couleur de l'icône blanche */
+        padding: 10px; /* Espacement interne */
+        border-radius: 5px; /* Coins légèrement arrondis */
+        text-decoration: none; /* Supprime le soulignement du lien */
+        font-size: 14px;   /* Taille de l'icône */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Légère ombre pour un effet de profondeur */
+        transition: background-color 0.3s ease; /* Transition douce au survol */
+        z-index: 1000;     /* S'assure que le bouton est au-dessus des autres éléments */
+        display: flex;     /* Pour centrer l'icône si nécessaire */
+        align-items: center; /* Pour centrer l'icône si nécessaire */
+        justify-content: center; /* Pour centrer l'icône si nécessaire */
+        }
+
+        .home-button:hover {
+            background-color: #0056b3; /* Couleur de fond plus foncée au survol */
         }
         /* Conteneur principal des cartes manager */
         .container {
@@ -160,6 +184,9 @@
     </style>
 </head>
 <body>
+    <a href="https://gc-hvt.github.io/Synthese/" class="home-button">
+        <i class="fas fa-home"></i>
+    </a>
     <div class="container">
         <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">Projets sans réunions</h1>
         <div class="legend mb-6">
