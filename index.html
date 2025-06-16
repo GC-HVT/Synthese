@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthèse animation production</title>
+    <!-- Inclure Tailwind CSS via CDN pour un style moderne et réactif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Définir la police Inter comme police par défaut */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style personnalisé pour les boutons au survol (hover) */
+        .btn-custom:hover {
+            transform: translateY(-2px); /* Léger déplacement vers le haut */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Ombre plus prononcée */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 max-w-4xl w-full text-center border border-gray-100">
+        <!-- Titre principal de la page -->
+        <h1 class="text-3xl md:text-4xl font-extrabold text-black mb-2 leading-tight">
+            Synthèse animation production
+        </h1>
+        <!-- Sous-titre -->
+        <p class="text-lg text-gray-500 mb-8">
+            mai 2025
+        </p>
+
+        <!-- Description ou introduction -->
+        <p class="text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
+            Indicateurs et points de contrôles
+        </p>
+
+        <!-- Conteneur des boutons avec Flexbox pour l'agencement réactif (2 colonnes) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Bouton: Autocontrôles -->
+            <button class="btn-custom bg-blue-600 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-blue-300" onclick="window.location.href='liens/Autocontroles_Diagramme_2025-06-13.html';">
+                <span class="block text-xl font-semibold mb-1">🛠️ Autocontrôles</span>
+                <span class="block text-sm opacity-90">Vérifications internes</span>
+            </button>
+
+            <!-- Bouton: Carnets d'heures non gérés -->
+            <button class="btn-custom bg-red-500 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-red-300" onclick="window.location.href='liens/CarnetsNonGeres_2025-06-16.html';">
+                <span class="block text-xl font-semibold mb-1">⏱️ Carnets d'heures non gérés</span>
+                <span class="block text-sm opacity-90">Suivi des temps manquants</span>
+            </button>
+
+            <!-- Bouton: Documents en GED admin -->
+            <button class="btn-custom bg-emerald-600 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-emerald-700 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-emerald-300" onclick="window.location.href='liens/DocGED.html';">
+                <span class="block text-xl font-semibold mb-1">📄 Documents en GED admin</span>
+                <span class="block text-sm opacity-90">Accès aux documents administratifs</span>
+            </button>
+
+            <!-- Bouton: Fin d'OS dépassée -->
+            <button class="btn-custom bg-orange-500 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-orange-600 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-orange-300" onclick="window.location.href='liens/FinOS_2025-06-13.html';">
+                <span class="block text-xl font-semibold mb-1">⚠️ Fin d'OS dépassée</span>
+                <span class="block text-sm opacity-90">Ordres de service en retard</span>
+            </button>
+
+            <!-- Bouton: Indicateurs -->
+            <button class="btn-custom bg-sky-600 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-sky-700 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-sky-300" onclick="window.location.href='liens/Indicateurs_2025-06-16.html';">
+                <span class="block text-xl font-semibold mb-1">📈 Indicateurs</span>
+                <span class="block text-sm opacity-90">Tableaux de bord et statistiques</span>
+            </button>
+
+            <!-- Bouton: Portail partenaires (accès client) -->
+            <button class="btn-custom bg-purple-600 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-purple-300" onclick="window.location.href='liens/PortailPartenaire_2025-06-13.html';">
+                <span class="block text-xl font-semibold mb-1">🤝 Portail partenaires</span>
+                <span class="block text-sm opacity-90">Accès et informations clients</span>
+            </button>
+
+            <!-- Bouton: Projets sans réunions -->
+            <button class="btn-custom bg-pink-600 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-pink-700 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-pink-300" onclick="window.location.href='liens/Reunions_2025-06-13.html';">
+                <span class="block text-xl font-semibold mb-1">📅 Projets sans réunions</span>
+                <span class="block text-sm opacity-90">Suivi des projets non planifiés</span>
+            </button>
+
+            <!-- Bouton: Sécurité mobile -->
+            <button class="btn-custom bg-gray-700 text-white py-4 px-6 rounded-xl shadow-lg hover:bg-gray-800 transition duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-gray-300" onclick="window.location.href='liens/Telephone_2025-06-16.html';">
+                <span class="block text-xl font-semibold mb-1">📱 Sécurité mobile</span>
+                <span class="block text-sm opacity-90">Politiques et état de la sécurité des appareils</span>
+            </button>
+
+        </div>
+    </div>
+
+</body>
+</html>
