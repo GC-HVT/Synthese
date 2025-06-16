@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antivirus à activer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style pour l'icône de l'accordéon */
+        .accordion-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        /* La flèche pointe vers la droite quand le contenu est masqué */
+        .accordion-icon.rotated {
+            transform: rotate(-90deg); /* Rotation pour faire pointer la flèche vers la droite */
+        }
+        /* Style pour les petits blocs qui représentent le nombre d'éléments */
+        .count-block {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin: 2px; /* Petite marge autour de chaque bloc */
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="p-2 bg-gray-100 antialiased">
+    <h1 class="text-2xl font-bold text-center text-gray-800 mb-6 sm:text-3xl">Antivirus / Enrôlement</h1>
+
+    <div id="responsibles-dashboard" class="max-w-4xl mx-auto"></div>
+
+    <script>
+        // Fonction utilitaire pour convertir un email en format "Prénom NOM"
+        function emailToName(email) {
+            if (!email || typeof email !== 'string' || !email.includes('@')) {
+                return email; // Retourne l'email tel quel si non valide
+            }
+            const localPart = email.split('@')[0];
+            const parts = localPart.split('.');
+            const formattedParts = parts.map(part => {
+                if (part.length === 0) return '';
+                return part.charAt(0).toUpperCase() + part.slice(1);
+            });
+            return formattedParts.join(' ');
+        }
+
+        // Nouvelle donnée brute fournie par l'utilisateur
+        const newRawData = `
+Manager Activité	Email	Etat	Antivirus
+BAC MATHIEU	eloise.gurdjian@herve-thermique.com	Conforme	1
+GICQUEAU CYRIL	emmanuel.thomas@herve-thermique.com	Non Conforme	1
+BAC MATHIEU	guillaume.collineau@herve-thermique.com	Conforme	1
+BAC MATHIEU	nadege.rialland@herve-thermique.com	Conforme	1
+GICQUEAU CYRIL	valentin.depirou@herve-thermique.com	Conforme	1
+BAC MATHIEU	alain.montrot@herve-thermique.com	Conforme	1
+GICQUEAU CYRIL	cyril.gicqueau@herve-thermique.com	Conforme	1
+BAC MATHIEU	fatoumata.conare@herve-thermique.com	Conforme	1
+BAC MATHIEU	josselin.goibeau@herve-thermique.com	Conforme	1
+BAC MATHIEU	matthieu.lambillard@herve-thermique.com	Conforme	1
+BAC MATHIEU	montassar.ayari.ext@herve-thermique.com	Conforme	1
+BAC MATHIEU	nathan.breloux@herve-thermique.com	Conforme	1
+BAC MATHIEU	nathan.letocquart@herve-thermique.com	Conforme	1
+BAC MATHIEU	nicolas.salaun@herve-thermique.com	Conforme	1
+BAC MATHIEU	tri-jean-paul.do@herve-thermique.com	Conforme	1
+BAGNASCO JULIE	christophe.baradat@herve-thermique.com	Non Conforme	2
+BAGNASCO JULIE	herve.mandy@herve-thermique.com	Conforme	1
+BAGNASCO JULIE	jeremy.moreau@herve-thermique.com	Conforme	1
+BAGNASCO JULIE	julie.bagnasco@herve-thermique.com	Conforme	1
+BAGNASCO JULIE	thomas.poyac@herve-thermique.com	Non Conforme	1
+BAGNASCO JULIE	yannick.bodin@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	alexandre.guyomard@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	benoit.tardivel@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	cedric.prudhomme@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	celine.dias@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	charly.guitton@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	charly.renaud.ext@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	clement.buchou@herve-thermique.com	Non Conforme	2
+FOUCHER THIBAULT	dimitry.guillemot@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	fabien.comte@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	franck.bizeray@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	jeanmarie.legros@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	jerome.guillet@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	kevin.potin@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	lea.vigouroux@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	melanie.naud@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	mickael.colas@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	romain.dumont@herve-thermique.com	Conforme	2
+FOUCHER THIBAULT	steven.jourdon@herve-thermique.com	Conforme	1
+FOUCHER THIBAULT	thibault.foucher@herve-thermique.com	Non Conforme	1
+FOUCHER THIBAULT	vincent.salomon@herve-thermique.com	Non Conforme	1
+HAMIDANE ZAKARIA	afzal-shahzad.shinwari@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	alexane.couto@herve-thermique.com	Non Conforme	1
+HAMIDANE ZAKARIA	angelo.coquard@herve-thermique.com	Non Conforme	1
+HAMIDANE ZAKARIA	brandon.dault.ext@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	david.drouillat@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	erwan.dejoie.ext@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	freddy.rapicault@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	hubert.quentel.ext@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	marc.suray@herve-thermique.com	Non Conforme	1
+HAMIDANE ZAKARIA	nicolas.corcket@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	nicolas.rochard@herve-thermique.com	Non Conforme	1
+HAMIDANE ZAKARIA	pierre.martins@herve-thermique.com	Non Conforme	2
+HAMIDANE ZAKARIA	raphaelle.haeck@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	stephane.tedeschi@herve-thermique.com	Conforme	1
+HAMIDANE ZAKARIA	zakaria.hamidane@herve-thermique.com	Non Conforme	1
+LE GARREC CHRISTOPHE FABKIT	alexandre.anne@fabkit.fr	Conforme	2
+LE GARREC CHRISTOPHE FABKIT	clement.daspres@fabkit.fr	Conforme	1
+LE GARREC CHRISTOPHE FABKIT	ferenc.stefko@fabkit.fr	Non Conforme	1
+LE GARREC CHRISTOPHE FABKIT	johann.salier@fabkit.fr	Non Conforme	1
+LE GARREC CHRISTOPHE FABKIT	olivier.chambron@fabkit.fr	Non Conforme	1
+LE GARREC CHRISTOPHE FABKIT	reda.ennamli@fabkit.fr	Conforme	1
+LE GARREC CHRISTOPHE FABKIT	romane.debeaux@fabkit.fr	Conforme	1
+NAVET MATTHIEU	anthony.callard@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	anthony.goron@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	antony.roger@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	charles.cartier@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	christophe.tison@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	clement.prunieras@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	denis.orsonneau@herve-thermique.com	Non Conforme	1
+NAVET MATTHIEU	jean-sebastien.marimao@herve-thermique.com	Non Conforme	1
+NAVET MATTHIEU	jeff.morel@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	jerome.collas@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	julien.dubois@herve-thermique.com	Non Conforme	1
+NAVET MATTHIEU	louan.babad@herve-thermique.com	Non Conforme	1
+NAVET MATTHIEU	manoel.touchet@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	mathieu.legrand@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	matthieu.navet@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	mickael.rigaudeau@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	nathan.fillon@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	nicolas.chopin@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	nicolas.saindon@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	paul-andre.labat@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	pierre.cadith@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	titouan.coutadeur@herve-thermique.com	Non Conforme	1
+NAVET MATTHIEU	ulrich.piel@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	willy.wera.ext@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	yannick.brin@herve-thermique.com	Non Conforme	1
+NAVET MATTHIEU	yannick.pichard@herve-thermique.com	Conforme	1
+NAVET MATTHIEU	yuna.bonnet@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	caroline.dufresne@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	clement.vayer@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	donovan.camille@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	geoffrey.marotte@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	herve.vio@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	jose-pierre.gomes@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	nicolas.villain@herve-thermique.com	Non Conforme	1
+RICHARDEAU CHRISTOPHE	raphael.chambard@herve-thermique.com	Conforme	2
+RICHARDEAU CHRISTOPHE	romain.jean@herve-thermique.com	Conforme	1
+RICHARDEAU CHRISTOPHE	samir.haidy@herve-thermique.com	Conforme	1
+`;
+
+        // Function to parse a data section
+        function parseData(rawData) {
+            const lines = rawData.trim().split('\n');
+            const parsed = [];
+            const headerLine = lines[0]; // "Manager Activité	Email	Etat	Antivirus"
+            const headers = headerLine.split('\t').map(h => h.trim().toLowerCase()); // ['manager activité', 'email', 'etat', 'antivirus']
+
+            // Specific emails that should be assigned to GICQUEAU CYRIL if their manager field is empty
+            const unassignedEmailsToGicqueau = [
+                "eloise.gurdjian@herve-thermique.com",
+                "emmanuel.thomas@herve-thermique.com",
+                "guillaume.collineau@herve-thermique.com",
+                "nadege.rialland@herve-thermique.com",
+                "valentin.depirou@herve-thermique.com"
+            ];
+
+            lines.slice(1).forEach(line => { // Skip header line
+                if (line.trim() === '') return; // Skip empty lines
+                const parts = line.split('\t').map(p => p.trim());
+                if (parts.length >= headers.length) {
+                    let manager = parts[headers.indexOf('manager activité')];
+                    const email = parts[headers.indexOf('email')];
+                    const etat = parts[headers.indexOf('etat')];
+                    const antivirusLevel = parseInt(parts[headers.indexOf('antivirus')]);
+
+                    // Assign to GICQUEAU CYRIL if manager is empty and email matches
+                    if (manager === '' && unassignedEmailsToGicqueau.includes(email)) {
+                        manager = "GICQUEAU CYRIL";
+                    } else if (manager === '') {
+                        // If still unassigned, skip this entry for now, or assign to a "No Manager" category
+                        console.warn(`Skipping unassigned email: ${email}`);
+                        return;
+                    }
+
+                    parsed.push({
+                        manager: manager,
+                        email: email,
+                        etat: etat,
+                        antivirusLevel: antivirusLevel
+                    });
+                }
+            });
+            return parsed;
+        }
+
+        const parsedData = parseData(newRawData);
+
+        const responsibleAntivirusDetails = {};
+        const responsibleEnrollmentDetails = {};
+
+        parsedData.forEach(entry => {
+            const manager = entry.manager;
+            const email = entry.email;
+            const etat = entry.etat;
+            const antivirusLevel = entry.antivirusLevel;
+
+            // Initialize manager's details if not exists
+            if (!responsibleAntivirusDetails[manager]) {
+                responsibleAntivirusDetails[manager] = {
+                    antivirusOK: new Set(),
+                    noAntivirus: new Set(),
+                    totalExpected: 0 // Will be updated later if no fixed total
+                };
+            }
+            if (!responsibleEnrollmentDetails[manager]) {
+                responsibleEnrollmentDetails[manager] = {
+                    conforme: new Set(),
+                    nonConforme: new Set()
+                };
+            }
+
+            // Populate Antivirus details
+            if (antivirusLevel === 1) { // Antivirus OK (Green)
+                responsibleAntivirusDetails[manager].antivirusOK.add(email);
+            } else if (antivirusLevel === 2) { // No Antivirus (Yellow)
+                responsibleAntivirusDetails[manager].noAntivirus.add(email);
+            }
+
+            // Populate Enrollment details
+            if (etat === 'Conforme') {
+                responsibleEnrollmentDetails[manager].conforme.add(email);
+            } else if (etat === 'Non Conforme') {
+                responsibleEnrollmentDetails[manager].nonConforme.add(email);
+            }
+        });
+
+        // Fixed totals for Antivirus from previous requests
+        const fixedResponsibleTotalsAntivirus = {
+            "NAVET MATTHIEU": 27,
+            "FOUCHER THIBAULT": 20,
+            "HAMIDANE ZAKARIA": 15,
+            "RICHARDEAU CHRISTOPHE": 10,
+            "BAGNASCO JULIE": 6,
+            "LE GARREC CHRISTOPHE FABKIT": 0, // This manager has 0 fixed total, so dynamic total will be used if contacts exist
+            "GICQUEAU CYRIL": 0, // This manager has 0 fixed total, so dynamic total will be used if contacts exist
+            "BAC MATHIEU": 0 // This manager has 0 fixed total, so dynamic total will be used if contacts exist
+        };
+
+        // Prepare the final responsibleTotals map for rendering
+        const finalResponsibleTotals = {};
+        const allResponsibleNamesSet = new Set([
+            ...Object.keys(fixedResponsibleTotalsAntivirus),
+            ...Object.keys(responsibleAntivirusDetails),
+            ...Object.keys(responsibleEnrollmentDetails)
+        ]);
+
+        allResponsibleNamesSet.forEach(manager => {
+            if (fixedResponsibleTotalsAntivirus[manager] !== undefined && fixedResponsibleTotalsAntivirus[manager] > 0) {
+                finalResponsibleTotals[manager] = fixedResponsibleTotalsAntivirus[manager];
+            } else {
+                // If manager is new or has 0 fixed total, calculate antivirus total from actual parsed data
+                const antivirusOKCount = responsibleAntivirusDetails[manager]?.antivirusOK.size || 0;
+                const noAntivirusCount = responsibleAntivirusDetails[manager]?.noAntivirus.size || 0;
+                finalResponsibleTotals[manager] = antivirusOKCount + noAntivirusCount;
+            }
+        });
+
+        const allResponsibleNamesSorted = Object.keys(finalResponsibleTotals).sort();
+
+        const dashboardContainer = document.getElementById('responsibles-dashboard');
+
+        // Parcours chaque responsable unique pour créer sa section
+        allResponsibleNamesSorted.forEach(responsibleName => {
+            const section = document.createElement('div');
+            section.className = 'bg-white p-4 rounded-lg shadow-md mb-4';
+
+            // Conteneur de l'en-tête : Nom du manager et bouton d'accordéon
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex items-center justify-between flex-wrap gap-y-2 border-b border-gray-200 pb-3 mb-3';
+
+            const responsibleTitle = document.createElement('h2');
+            responsibleTitle.className = 'text-lg font-semibold text-gray-800 mr-2 flex-shrink-0';
+            responsibleTitle.textContent = responsibleName;
+            headerRow.appendChild(responsibleTitle);
+
+            // Ajout du headerRow à la section en premier pour le positionnement du bouton d'accordéon
+            section.appendChild(headerRow);
+
+            // --- Section Antivirus ---
+            const antivirusRow = document.createElement('div');
+            antivirusRow.className = 'flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-2';
+
+            const antivirusLabel = document.createElement('span');
+            antivirusLabel.className = 'text-sm font-semibold text-gray-700 w-24 flex-shrink-0';
+            antivirusLabel.textContent = "Antivirus:";
+            antivirusRow.appendChild(antivirusLabel);
+
+            const antivirusOKCount = responsibleAntivirusDetails[responsibleName]?.antivirusOK.size || 0;
+            const noAntivirusCount = responsibleAntivirusDetails[responsibleName]?.noAntivirus.size || 0;
+            const antivirusTotalCount = finalResponsibleTotals[responsibleName]; // Le total provient de finalResponsibleTotals
+
+            const antivirusBlocksContainer = document.createElement('div');
+            antivirusBlocksContainer.className = 'flex flex-wrap items-center mt-1 sm:mt-0';
+
+            for (let i = 0; i < antivirusTotalCount; i++) {
+                const block = document.createElement('span');
+                block.className = 'count-block';
+                if (i < antivirusOKCount) {
+                    block.style.backgroundColor = '#2ecc71'; // Vert pour Antivirus OK
+                } else if (i < (antivirusOKCount + noAntivirusCount)) {
+                    block.style.backgroundColor = '#fcd34d'; // Jaune pour Pas d'Antivirus
+                } else {
+                    block.style.backgroundColor = '#95a5a6'; // Gris pour non valorisé (si total > compte actuel)
+                }
+                antivirusBlocksContainer.appendChild(block);
+            }
+            antivirusRow.appendChild(antivirusBlocksContainer);
+            section.appendChild(antivirusRow);
+
+            // --- Section Enrôlement ---
+            const enrollmentRow = document.createElement('div');
+            enrollmentRow.className = 'flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-3';
+
+            const enrollmentLabel = document.createElement('span');
+            enrollmentLabel.className = 'text-sm font-semibold text-gray-700 w-24 flex-shrink-0';
+            enrollmentLabel.textContent = "Enrôlement:";
+            enrollmentRow.appendChild(enrollmentLabel);
+
+            const enrollmentNonConformeContacts = responsibleEnrollmentDetails[responsibleName] ? Array.from(responsibleEnrollmentDetails[responsibleName].nonConforme) : [];
+            const enrollmentBlocksContainer = document.createElement('div');
+            enrollmentBlocksContainer.className = 'flex flex-wrap items-center mt-1 sm:mt-0';
+
+            enrollmentNonConformeContacts.forEach(email => {
+                const block = document.createElement('span');
+                block.className = 'count-block';
+                block.style.backgroundColor = '#ef4444'; // Rouge uniquement pour "non fait"
+                enrollmentBlocksContainer.appendChild(block);
+            });
+
+            enrollmentRow.appendChild(enrollmentBlocksContainer);
+            section.appendChild(enrollmentRow);
+
+            // --- Bouton et Conteneur des Détails (Accordéon) ---
+            const totalDetailContacts = noAntivirusCount + enrollmentNonConformeContacts.length;
+
+            const toggleButton = document.createElement('div');
+            toggleButton.className = 'flex items-center cursor-pointer select-none ml-auto flex-shrink-0';
+            toggleButton.innerHTML = `<span class="text-sm font-medium text-gray-700 mr-2">Actions à mener / Détails contacts (${totalDetailContacts})</span> <span class="accordion-icon rotated">&#9660;</span>`;
+            headerRow.appendChild(toggleButton);
+
+            const detailsContainer = document.createElement('div');
+            detailsContainer.className = 'email-details-content hidden mt-4 border-t border-gray-200 pt-3';
+
+            // Liste des Antivirus (uniquement "pas d'antivirus")
+            const antivirusDetailsList = document.createElement('div');
+            const noAntivirusEmails = responsibleAntivirusDetails[responsibleName]?.noAntivirus ? Array.from(responsibleAntivirusDetails[responsibleName].noAntivirus) : [];
+            antivirusDetailsList.innerHTML = `<h3 class="text-xs font-medium text-gray-600 mb-1">Antivirus (${noAntivirusEmails.length}):</h3>`;
+            const ulNoAntivirus = document.createElement('ul');
+            ulNoAntivirus.className = 'list-disc list-inside text-sm text-gray-600 mb-2';
+
+            if (noAntivirusEmails.length > 0) {
+                noAntivirusEmails.forEach(email => {
+                    const li = document.createElement('li');
+                    li.textContent = emailToName(email); // Affiche uniquement le nom
+                    ulNoAntivirus.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Tous les contacts Antivirus sont OK.";
+                ulNoAntivirus.appendChild(li);
+            }
+            antivirusDetailsList.appendChild(ulNoAntivirus);
+            detailsContainer.appendChild(antivirusDetailsList);
+
+            // Liste des Enrôlement (uniquement "non fait")
+            const enrollmentDetailsList = document.createElement('div');
+            enrollmentDetailsList.innerHTML = `<h3 class="text-xs font-medium text-gray-600 mb-1">Enrôlement (${enrollmentNonConformeContacts.length}):</h3>`;
+            const ulNonConformeEnrollment = document.createElement('ul');
+            ulNonConformeEnrollment.className = 'list-disc list-inside text-sm text-gray-600';
+
+            if (enrollmentNonConformeContacts.length > 0) {
+                enrollmentNonConformeContacts.forEach(email => {
+                    const li = document.createElement('li');
+                    li.textContent = emailToName(email); // Affiche uniquement le nom
+                    ulNonConformeEnrollment.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Tous les contacts Enrôlement sont Conformes.";
+                ulNonConformeEnrollment.appendChild(li);
+            }
+            enrollmentDetailsList.appendChild(ulNonConformeEnrollment);
+            detailsContainer.appendChild(enrollmentDetailsList);
+
+            section.appendChild(detailsContainer);
+            dashboardContainer.appendChild(section);
+
+            // Ajout de l'écouteur d'événements pour le bouton de basculement
+            toggleButton.addEventListener('click', () => {
+                const icon = toggleButton.querySelector('.accordion-icon');
+                detailsContainer.classList.toggle('hidden'); // Bascule la visibilité
+                icon.classList.toggle('rotated'); // Fait pivoter l'icône de la flèche
+            });
+        });
+    </script>
+</body>
+</html>

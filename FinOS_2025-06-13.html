@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fin OS dépassé</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Styles personnalisés pour la flèche de l'accordéon */
+        .arrow-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .accordion-header[aria-expanded="true"] .arrow-icon {
+            transform: rotate(180deg);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans leading-normal tracking-normal p-3 md:p-4">
+
+    <div class="container mx-auto my-6 p-4 md:p-6 bg-white shadow-lg rounded-xl border border-gray-100">
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6 md:mb-4 tracking-tight">Fin OS Dépassé</h1>
+
+        <!-- Nouvelle section pour les actions à mener -->
+        <div class="mb-8 p-4 bg-gray-100 rounded-lg shadow-inner">
+            <h2 class="text-xl font-bold text-gray-800 mb-3">Actions à mener :</h2>
+            <ul class="list-disc list-inside text-gray-700">
+                <li class="mb-1">Demander un avenant de fin d'OS et modifier la date.</li>
+                <li>Passer le dossier en réception.</li>
+            </ul>
+        </div>
+        <!-- Fin de la nouvelle section -->
+
+        <div id="app">
+            <!-- Le contenu des accordéons sera chargé dynamiquement ici par JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Données brutes fournies par l'utilisateur sous forme de chaîne de caractères
+            const rawData = `
+Manager	Chantier	Responsable exec	Fin exec	Date réception
+RICHARDEAU CHRISTOPHE	2813000460 - FIMINCO ROMAINVILLE	BRAMBAN JONATHAN	30-04-2020	
+BAC MATHIEU	820 - GRAPHIK ; Ensemble de 161 logements collectifs	ORSONNEAU DENIS	31-12-2021	
+NAVET MATTHIEU	001 - ARCHIPEL - construction de 37 logements sociaux - ST NAZAIRE	CORCKET NICOLAS	31-12-2021	
+NAVET MATTHIEU	006 - SAV	FOUQUET GLENN	31-12-2021	
+FOUCHER THIBAULT	027 - travaux de réhabilitation piscine Neptune - DONGES	GRELLIER NICOLAS	31-12-2022	
+HAMIDANE ZAKARIA	012 - Villa d'Indre et Loire	BAC MATHIEU	31-12-2022	
+HAMIDANE ZAKARIA	023 - Fluide Villa 37	BUCHOU CLEMENT	31-12-2022	
+FOUCHER THIBAULT	023 - Travaux de pérennisation de la piscine Petite Amazonie - NANTES	GRELLIER NICOLAS	04-06-2023	
+FOUCHER THIBAULT	006 - Travaux de construction d'un centre Aquatique - HERBIGNAC	GRELLIER NICOLAS	30-06-2023	
+FOUCHER THIBAULT	035 - petits travaux Nicolas GRELLIER	COMTE FABIEN	30-06-2023	
+HAMIDANE ZAKARIA	030 - Caisse d'épargne - aménagement plateau de bureau - CESSON SEVIGNE	GUYOMARD ALEXANDRE	07-07-2023	
+NAVET MATTHIEU	012 - STREAM - construction de 24 logements - NANTES	ANNE ALEXANDRE	31-10-2023	
+FOUCHER THIBAULT	037 - rénovation de la zone pataugeoire - piscine STE ANNE SUR BRIVET	FOUCHER THIBAULT	19-12-2023	
+FOUCHER THIBAULT	020 - Construction d'un centre aquatique - GUICHEN	BUCHOU CLEMENT	31-12-2023	
+FOUCHER THIBAULT	026 - Extension & rénovation Hôtel IBIS - TREILLIERES	GRELLIER NICOLAS	31-12-2023	
+NAVET MATTHIEU	014 - LAØME PC1 T2 - construction de 62 logements - NANTES	ORSONNEAU DENIS	31-12-2023	
+NAVET MATTHIEU	016 - construction de 14 logements - MOUTIERS EN RETZ	LUCAS ANTHONY	31-12-2023	
+NAVET MATTHIEU	021 - Construction de 14 logements - MOUTIERS EN RETZ - ELEC	RIGAUDEAU MICKAEL	31-12-2023	
+NAVET MATTHIEU	022 - Construction de 32 logements individuels - ST PERE-EN-RETZ - ELEC	RIGAUDEAU MICKAEL	30-01-2024	
+NAVET MATTHIEU	017 - construction de 32 logements individuels - ST PERE-EN-RETZ	LUCAS ANTHONY	31-01-2024	
+FOUCHER THIBAULT	038 - AQUABAIE - réhabilitation de la halle sportive - SAINT-BRIEUC	GUYOMARD ALEXANDRE	26-02-2024	
+HAMIDANE ZAKARIA	047 - résidence MOULIN DU BOIS - SAINT-HERBLAIN	ROCHARD NICOLAS	31-03-2024	
+FOUCHER THIBAULT	042 - piscine MONTMORENCY	POTIN KEVIN	12-04-2024	
+FOUCHER THIBAULT	004 - ARBORESCENCE - Construction d'un complexe Immobilier - ANGERS	GRELLIER NICOLAS	31-05-2024	
+FOUCHER THIBAULT	058 - rénovation de la piscine Château-Landon - PARIS	BUCHOU CLEMENT	31-05-2024	
+HAMIDANE ZAKARIA	019 - BE GREEN - Construction de 6 plateaux de bureaux - NANTES	MANDY HERVE	31-05-2024	
+HAMIDANE ZAKARIA	022 - ILOT ADAM - Plateau de bureaux - NANTES	HAMIDANE ZAKARIA	31-05-2024	
+HAMIDANE ZAKARIA	044 - AIRBUS MID BUFFER	CORCKET NICOLAS	31-05-2024	
+NAVET MATTHIEU	008 - FUSION - ILOT F - Activités - Bureaux - Hôtel - Logements - NANTES	BABAD LOUAN	31-05-2024	
+NAVET MATTHIEU	013 - CARAT - construction de 21 logements - NANTES	ANNE ALEXANDRE	31-05-2024	
+FOUCHER THIBAULT	031 - COURTOISVILLE - Rénovation et extension du grand hôtel - ST MALO	GUYOMARD ALEXANDRE	03-06-2024	
+FOUCHER THIBAULT	044 - MAISON SAINT CHARLES - MISSILLAC	GICQUEAU CYRIL	30-06-2024	
+NAVET MATTHIEU	011 - ARBOREA - construction de 57 logements - ANGERS	CARTIER CHARLES	30-06-2024	
+NAVET MATTHIEU	020 - ARBOREA - construction de 57 logements - ANGERS - ELEC	RIGAUDEAU MICKAEL	30-06-2024	
+NAVET MATTHIEU	027 - CARRE DES OFFICIERS - construction de 51 logements - NANTES	ROGER ANTONY	01-07-2024	
+FOUCHER THIBAULT	009 - Conception, construction centre aqualudique - CABOURG	POTIN KEVIN	05-07-2024	
+HAMIDANE ZAKARIA	053 - CEBPL - ORVAULT	ROCHARD NICOLAS	08-07-2024	
+FOUCHER THIBAULT	055 - CENTER PARCS - VILLAGE NATURE PARIS (LIFTER)	BUCHOU CLEMENT	12-07-2024	
+NAVET MATTHIEU	035 - PITRE CHEVALIER - construction de 37 logements collectifs - PAIMBOEUF	ROGER ANTONY	15-07-2024	
+FOUCHER THIBAULT	052 - AQUATONIC - SAINT GREGOIRE	GUYOMARD ALEXANDRE	28-07-2024	
+HAMIDANE ZAKARIA	065 - POULIGOU - Travaux d'amélioration énergétique - PORNICHET	HAMIDANE ZAKARIA	08-08-2024	
+NAVET MATTHIEU	023 - ECLOZ - construction de 83 logements collectifs et bureaux - NANTES	LEGRAND MATHIEU	20-08-2024	
+HAMIDANE ZAKARIA	021 - PARC OT - Construction immeuble de bureaux - ST HERBLAIN	CORCKET NICOLAS	30-08-2024	
+HAMIDANE ZAKARIA	052 - LES REFLETS DE LOIRE - travaux d amenagement - NANTES	HAMIDANE ZAKARIA	30-08-2024	
+LE GARREC CHRISTOPHE FABKIT	072 - FABKIT MATERAS (HT NANTES)	SALIER JOHANN	30-08-2024	
+HAMIDANE ZAKARIA	066 - ECOLE ERLON - réaménagement de 3 niveaux de bureaux - NANTES	ROCHARD NICOLAS	30-09-2024	
+LE GARREC CHRISTOPHE FABKIT	076 - FABKIT ECLOZ (HT NANTES)	SALIER JOHANN	01-10-2024	
+LE GARREC CHRISTOPHE FABKIT	077 - FABKIT ARBOREA (HT NANTES)	SALIER JOHANN	01-10-2024	
+LE GARREC CHRISTOPHE FABKIT	079 - FABKIT MOIRANS LA GARE (HT LYON)	SALIER JOHANN	02-10-2024	
+LE GARREC CHRISTOPHE FABKIT	087 - FABKIT COUR MONSELET (HT NANTES)	SALIER JOHANN	05-11-2024	
+LE GARREC CHRISTOPHE FABKIT	088 - FABKIT CHU MONACO	SALIER JOHANN	05-11-2024	
+LE GARREC CHRISTOPHE FABKIT	089 - FABKIT CHU NANTES	SALIER JOHANN	05-11-2024	
+NAVET MATTHIEU	015 - MATERA - construction de 81 logements - NANTES	ROGER ANTONY	05-12-2024	
+HAMIDANE ZAKARIA	016 - LES NOBELS - résidentialisation de 193 logements - ST HERBLAIN	ROCHARD NICOLAS	23-12-2024	
+NAVET MATTHIEU	058 - petits travaux électricité 2024	DUBOIS JULIEN	30-12-2024	
+FOUCHER THIBAULT	014 - BOUYGUES - Centre Aquatique à SAINT-DENIS	BUCHOU CLEMENT	31-12-2024	
+FOUCHER THIBAULT	024 - Réhabilitation partielle de la piscine Paul Asseman - DUNKERQUE	BUCHOU CLEMENT	31-12-2024	
+FOUCHER THIBAULT	039 - LES ROCHES ROUGES - piscine de l hôtel - LA BAULE	FOUCHER THIBAULT	31-12-2024	
+FOUCHER THIBAULT	047 - VALDYS	GUILLET JEROME	31-12-2024	
+FOUCHER THIBAULT	048 - hotel MERCURE - QUIBERON	GRELLIER NICOLAS	31-12-2024	
+FOUCHER THIBAULT	050 - modification de la production d énergies - MACHECOUL	GRELLIER NICOLAS	31-12-2024	
+HAMIDANE ZAKARIA	015 - EHPAD LA HOUSSAIS - REZE	HAMIDANE ZAKARIA	31-12-2024	
+HAMIDANE ZAKARIA	043 - LES ROCHES ROUGES - hôtel - LA BAULE	CORCKET NICOLAS	31-12-2024	
+HAMIDANE ZAKARIA	054 - petits travaux 2024	HAMIDANE ZAKARIA	31-12-2024	
+NAVET MATTHIEU	037 - petits travaux 2024	MARIMAO JEAN-SEBASTIEN	31-12-2024	
+NAVET MATTHIEU	051 - EPHAD OCEANE - Remise en conformité de l'installation ES - NANTES	ROGER ANTONY	31-12-2024	
+FOUCHER THIBAULT	032 - petits travaux Romain DUMONT	DUMONT Romain	01-01-2025	
+LE GARREC CHRISTOPHE FABKIT	092 - FABKIT ORGANIC (HT LYON)	SALIER JOHANN	07-01-2025	
+FOUCHER THIBAULT	059 - AQUALIS - travaux d'amélioration énergétique - GOUVIEUX	PRUD HOMME CEDRIC	31-01-2025	
+RICHARDEAU CHRISTOPHE	2814000395 - Lycée de Sartrouville / Bouygues	GOMES JOSE-PIERRE	31-01-2025	
+FOUCHER THIBAULT	036 - construction d'un centre aquatique - PACE	GUYOMARD ALEXANDRE	28-04-2025	
+HAMIDANE ZAKARIA	003 - CEBPL FLEX2 - Aménagement des plateaux de bureaux - ORVAULT	TEDESCHI STEPHANE	30-04-2025	
+HAMIDANE ZAKARIA	064 - EPF - Construction campus universitaire - SAINT NAZAIRE	CORCKET NICOLAS	30-04-2025	
+LE GARREC CHRISTOPHE FABKIT	121 - FABKIT DEVELOPPEMENT KIT	SALIER JOHANN	01-05-2025	
+HAMIDANE ZAKARIA	041 - FUJI - bâtiments I-J - NANTES	DROUILLAT DAVID	15-05-2025	
+NAVET MATTHIEU	026 - FUJI - bâtiment K - NANTES	CALLARD ANTHONY	15-05-2025	
+`;
+
+            // Analyse les données brutes en un tableau d'objets JavaScript.
+            // Chaque ligne est transformée en un objet avec des clés correspondant aux en-têtes.
+            const lines = rawData.trim().split('\n');
+            // Nettoie les en-têtes pour les utiliser comme noms de propriétés (remplace espaces et tirets par des underscores)
+            const headers = lines[0].split('\t').map(h => h.trim().replace(/ /g, '_').replace(/-/g, '_'));
+            const projects = lines.slice(1).map(line => {
+                const values = line.split('\t');
+                const project = {};
+                headers.forEach((header, index) => {
+                    project[header] = values[index] ? values[index].trim() : '';
+                });
+                return project;
+            });
+
+            // Obtient la date d'aujourd'hui et la normalise au début du jour pour une comparaison cohérente.
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Regroupe les projets par manager.
+            // La structure résultante est un objet où chaque clé est un nom de manager
+            // et la valeur est un tableau des projets de ce manager.
+            const groupedByManager = projects.reduce((acc, project) => {
+                if (!acc[project.Manager]) {
+                    acc[project.Manager] = [];
+                }
+                acc[project.Manager].push(project);
+                return acc;
+            }, {});
+
+            // Référence au div où le contenu sera rendu.
+            const appDiv = document.getElementById('app');
+
+            // Détermine le nombre maximal de jours de retard pour l'échelle de la barre visuelle.
+            // Cela permet d'assurer que les barres sont proportionnelles même avec des écarts très grands.
+            let maxOverdueDays = 0;
+            projects.forEach(project => {
+                const dateParts = project.Fin_exec.split('-');
+                if (dateParts.length === 3) {
+                    // Les dates sont au format JJ-MM-AAAA. Le constructeur Date(année, mois-1, jour) est utilisé
+                    // pour créer des objets Date fiables pour la comparaison.
+                    const finExecDate = new Date(Number(dateParts[2]), Number(dateParts[1]) - 1, Number(dateParts[0]));
+                    finExecDate.setHours(0, 0, 0, 0);
+
+                    const diffTime = today.getTime() - finExecDate.getTime();
+                    // Calcule la différence en jours, arrondie à l'entier supérieur
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays > maxOverdueDays) {
+                        maxOverdueDays = diffDays;
+                    }
+                }
+            });
+
+            // Définit la largeur maximale pour la barre visuelle et calcule le facteur d'échelle.
+            // Ce facteur est utilisé pour convertir le nombre de jours en une largeur de pixel pour la barre.
+            const maxBarWidthPx = 180; // Largeur maximale en pixels pour la barre (réduite pour un design plus compact)
+            const scaleFactor = maxOverdueDays > 0 ? maxBarWidthPx / maxOverdueDays : 0;
+
+            // Itère sur chaque manager regroupé et crée une section accordéon pour chacun.
+            for (const managerName in groupedByManager) {
+                const managerDiv = document.createElement('div');
+                managerDiv.className = 'mb-4 bg-white shadow-md rounded-lg overflow-hidden transform transition-all duration-300 hover:scale-[1.005]';
+
+                // Compte le nombre de chantiers pour le manager actuel
+                const projectCount = groupedByManager[managerName].length;
+
+                // En-tête de l'accordéon (bouton cliquable pour déplier/replier).
+                // IMPORTANT: Déclarer `button` avec `const` pour s'assurer que chaque itération a sa propre portée.
+                const button = document.createElement('button');
+                button.className = 'accordion-header w-full text-left p-4 font-semibold text-lg text-gray-800 focus:outline-none flex justify-between items-center bg-blue-100 hover:bg-blue-200 transition duration-300 ease-in-out rounded-t-lg';
+                button.setAttribute('aria-expanded', 'false'); // L'état initial est "replié"
+                button.innerHTML = `
+                    <span>${managerName}</span>
+                    <span class="flex items-center"> <!-- Ce span contiendra le compte et la flèche -->
+                        <span class="px-2 py-1 bg-blue-300 text-blue-800 text-sm font-bold rounded-full mr-3">${projectCount}</span>
+                        <span class="arrow-icon text-gray-600">&#9660;</span> <!-- Flèche vers le bas, tourne à 180deg quand déplié -->
+                    </span>
+                `;
+                managerDiv.appendChild(button);
+
+                // Contenu de l'accordéon (caché par défaut).
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'accordion-content hidden p-4 border-t border-gray-200 bg-blue-50';
+
+                // Trie les projets pour le manager actuel par date de Fin_exec (du plus ancien au plus récent).
+                const sortedProjects = groupedByManager[managerName].sort((a, b) => {
+                    const dateA = new Date(Number(a.Fin_exec.split('-')[2]), Number(a.Fin_exec.split('-')[1]) - 1, Number(a.Fin_exec.split('-')[0]));
+                    const dateB = new Date(Number(b.Fin_exec.split('-')[2]), Number(b.Fin_exec.split('-')[1]) - 1, Number(b.Fin_exec.split('-')[0]));
+                    return dateA - dateB;
+                });
+
+                // Crée un élément HTML pour chaque projet
+                sortedProjects.forEach(project => {
+                    const projectItem = document.createElement('div');
+                    // Styles pour chaque élément de projet, avec des marges et paddings réduits
+                    projectItem.className = 'project-item mb-3 p-3 bg-white rounded-md shadow-sm border border-gray-100 last:mb-0 transform transition-transform duration-200 hover:scale-[1.01]';
+
+                    // Analyse la date Fin_exec pour le calcul de l'écart.
+                    const dateParts = project.Fin_exec.split('-');
+                    let finExecDate;
+                    if (dateParts.length === 3) {
+                        finExecDate = new Date(Number(dateParts[2]), Number(dateParts[1]) - 1, Number(dateParts[0]));
+                        finExecDate.setHours(0, 0, 0, 0);
+                    } else {
+                        finExecDate = null; // Gère les formats de date invalides
+                    }
+
+                    let diffDays = 0;
+                    let écartColor = 'bg-gray-300'; // Couleur par défaut
+                    let écartText = `Date non disponible`;
+                    let barWidth = 0;
+
+                    if (finExecDate) {
+                        const diffTime = today.getTime() - finExecDate.getTime();
+                        diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Différence en jours
+
+                        if (diffDays > 0) { // Projet en retard
+                            écartColor = 'bg-red-500';
+                            écartText = `${diffDays} jours de retard`;
+                            barWidth = Math.min(maxBarWidthPx, diffDays * scaleFactor);
+                        } else if (diffDays < 0) { // Date future
+                            écartColor = 'bg-green-500';
+                            écartText = `${Math.abs(diffDays)} jours avant la fin`;
+                            // Pour les projets futurs, une barre plus petite pour la distinction visuelle
+                            barWidth = Math.min(maxBarWidthPx / 2, Math.abs(diffDays) * scaleFactor);
+                        } else { // Date de fin est aujourd'hui
+                            écartColor = 'bg-yellow-400';
+                            écartText = `À jour`;
+                            barWidth = 10; // Petite largeur fixe pour indiquer que c'est "À jour"
+                        }
+                    }
+
+                    // Construit l'innerHTML de chaque élément de projet avec les détails et la barre d'écart.
+                    projectItem.innerHTML = `
+                        <p class="font-semibold text-base text-gray-900 mb-1">Chantier: <span class="font-normal text-gray-700">${project.Chantier}</span></p>
+                        <div class="flex items-center">
+                            <p class="font-medium text-sm text-gray-800 mr-2">Fin OS : <span class="font-normal text-gray-700">${project.Fin_exec}</span></p>
+                            <div class="h-3 rounded-full ${écartColor}" style="width: ${barWidth}px; min-width: ${barWidth > 0 ? 5 : 0}px;"></div>
+                            <span class="ml-2 text-xs font-medium text-gray-700">${écartText}</span>
+                        </div>
+                    `;
+                    contentDiv.appendChild(projectItem);
+                });
+
+                managerDiv.appendChild(contentDiv);
+                appDiv.appendChild(managerDiv);
+
+                // Ajoute un écouteur d'événements au bouton pour basculer la visibilité de l'accordéon.
+                button.addEventListener('click', () => {
+                    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                    button.setAttribute('aria-expanded', !isExpanded);
+                    contentDiv.classList.toggle('hidden');
+                    const icon = button.querySelector('.arrow-icon');
+                    icon.classList.toggle('rotate-180');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

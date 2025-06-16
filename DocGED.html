@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents en GEIDE Admin</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Utilisation de la police Inter */
+            margin: 20px;
+            background-color: #f4f7f6; /* Légèrement plus doux */
+            color: #333;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .accordion-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 12px; /* Coins plus arrondis */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Ombre plus prononcée */
+            overflow: hidden; /* Assure que les coins arrondis sont respectés */
+        }
+        .accordion-item {
+            border-bottom: 1px solid #e0e0e0; /* Ligne de séparation plus douce */
+        }
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+        .accordion-header {
+            background-color: #17a2b8; /* Bleu-vert apaisant */
+            background-image: linear-gradient(to right, #17a2b8, #138496); /* Dégradé */
+            color: white;
+            padding: 18px 25px; /* Augmentation du padding */
+            cursor: pointer;
+            border-radius: 0; /* Les coins arrondis sont sur le conteneur */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1em; /* Taille de police plus grande */
+            font-weight: bold;
+            transition: background-color 0.3s ease, background-image 0.3s ease;
+        }
+        .accordion-header:hover {
+            background-color: #138496;
+            background-image: linear-gradient(to right, #138496, #117a8b);
+        }
+        .accordion-content {
+            padding: 25px; /* Augmentation du padding */
+            background-color: #f9fbfb; /* Arrière-plan légèrement différent */
+            display: none;
+            overflow-x: auto;
+            border-radius: 0 0 12px 12px;
+            /* Allow tooltips to overflow if needed, but horizontal scroll for table is still wanted */
+            overflow-y: visible; /* Allow vertical overflow for tooltips */
+            position: relative; /* Establish stacking context for tooltips */
+        }
+        .accordion-content.show {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px; /* Marge supérieure augmentée */
+            border-radius: 8px; /* Coins arrondis pour le tableau */
+            overflow: hidden; /* For table corners, not affecting tooltip */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ececec; /* Bordures de cellules plus fines */
+            padding: 10px 10px; /* Padding augmenté */
+            text-align: left;
+            white-space: nowrap;
+            font-size: 0.8em;
+        }
+        th {
+            background-color: #e9ecef; /* Couleur de fond d'en-tête */
+            font-weight: bold;
+            color: #555;
+        }
+        .column-toggle-buttons {
+            margin-bottom: 20px; /* Marge inférieure augmentée */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px; /* Espacement entre les boutons */
+        }
+        .column-toggle-buttons button {
+            padding: 10px 15px; /* Padding des boutons */
+            border: none;
+            border-radius: 8px; /* Coins arrondis des boutons */
+            cursor: pointer;
+            background-color: #6c757d;
+            color: white;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .column-toggle-buttons button.active {
+            background-color: #28a745; /* Vert quand visible */
+            box-shadow: 0 2px 6px rgba(40,167,69,0.3);
+        }
+        .column-toggle-buttons button:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+        .column-toggle-buttons button.active:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        .arrow {
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            display: inline-block;
+            padding: 4px; /* Flèche plus grande */
+            transition: transform 0.3s ease;
+        }
+        .right {
+            transform: rotate(-45deg);
+        }
+        .down {
+            transform: rotate(45deg);
+            margin-top: 3px;
+        }
+        .chart-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px; /* Espace réduit entre les diagrammes pour tenir sur une ligne */
+            margin-bottom: 25px; /* Marge inférieure pour les diagrammes */
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ccc; /* Ligne sous les graphiques */
+            /* Ensure this container doesn't cut off tooltips */
+            overflow: visible; 
+        }
+        .chart-container {
+            width: 100px; /* Largeur réduite pour chaque conteneur de graphique */
+            height: 100px; /* Hauteur réduite pour chaque conteneur de graphique */
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px; /* Increased padding to give room for tooltips */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative; /* Important for tooltip z-index */
+            overflow: visible; /* Ensure tooltips are not clipped by this container */
+        }
+        .chart-container h4 {
+            margin-top: 0;
+            margin-bottom: 5px; /* Marge réduite */
+            color: #343a40;
+            font-size: 0.7em; /* Taille de police réduite */
+            text-align: center;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: calc(100% - 30px); /* For title, adjust to prevent cutting off tooltip */
+            margin-bottom: 10px; /* Give some space below the canvas for tooltips */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div><h1>Documents en GEIDE</h1></div>
+    <div class="accordion-container"></div>
+
+    <script>
+        // Raw data provided by the user
+        const data = `Manager	Libellé Projet	Début Exécution	Fin Projet	Date Réception	Acte Engagt	CCAG	CCAP	CCTP	Cde Client	CST	PV ST	PPSPS	PV Récept	
+FOUCHER THIBAULT	004 - ARBORESCENCE - Construction d'un complexe Immobilier - ANGERS	13-04-2021	31-05-2024		10	1	1	2	0	13	31	0	1	
+FOUCHER THIBAULT	006 - travaux de construction d'un centre Aquatique - HERBIGNAC	30-06-2021	30-06-2023		2	0	1	2	0	39	28	2	4	
+FOUCHER THIBAULT	009 - conception, construction centre aqualudique - CABOURG	20-07-2021	05-07-2024		3	0	0	1	0	39	31	0	1	
+FOUCHER THIBAULT	014 - BOUYGUES - Centre Aquatique à SAINT-DENIS	20-09-2021	31-12-2024		2	0	0	1	0	6	2	1	1	
+FOUCHER THIBAULT	020 - construction d'un centre aquatique - GUICHEN	15-02-2022	31-12-2023		1	0	1	1	0	4	4	0	4	
+FOUCHER THIBAULT	023 - travaux de pérennisation de la piscine Petite Amazonie - NANTES	10-06-2022	04-06-2023		3	0	1	1	0	4	1	0	5	
+FOUCHER THIBAULT	024 - réhabilitation partielle de la piscine Paul Asseman - DUNKERQUE	23-06-2022	31-12-2024		5	0	1	1	0	6	6	0	4	
+FOUCHER THIBAULT	026 - extension & rénovation Hôtel IBIS - TREILLIERES	01-08-2022	31-12-2023		2	0	0	1	0	6	7	0	1	
+FOUCHER THIBAULT	033 - petits travaux 2024	01-01-2023	01-01-2024		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	032 - petits travaux Romain DUMONT	01-01-2023	01-01-2025		0	0	0	0	0	8	11	0	0	
+FOUCHER THIBAULT	031 - COURTOISVILLE - rénovation et extension du grand hôtel - ST MALO	11-01-2023	03-06-2024		3	0	0	1	0	3	6	2	0	
+FOUCHER THIBAULT	035 - petits travaux Nicolas GRELLIER	21-02-2023	30-06-2023		1	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	036 - construction d'un centre aquatique - PACE	19-04-2023	28-04-2025		1	0	1	1	0	11	12	4	6	
+FOUCHER THIBAULT	037 - rénovation de la zone pataugeoire - piscine STE ANNE SUR BRIVET	25-05-2023	19-12-2023		2	0	1	2	0	5	7	2	2	
+FOUCHER THIBAULT	038 - AQUABAIE - réhabilitation de la halle sportive - SAINT-BRIEUC	27-06-2023	26-02-2024		2	0	1	2	0	6	1	0	2	
+FOUCHER THIBAULT	039 - LES ROCHES ROUGES - piscine de l hôtel - LA BAULE	19-09-2023	31-12-2024		1	0	1	5	0	0	0	2	0	
+FOUCHER THIBAULT	042 - piscine MONTMORENCY	28-09-2023	12-04-2024		2	0	2	1	0	6	5	0	0	
+FOUCHER THIBAULT	041 - piscine BELLIARD - PARIS	28-09-2023	30-07-2025		2	0	1	2	0	4	5	3	0	
+FOUCHER THIBAULT	043 - extension et restructuration de la piscine des Dervallieres - NANTES	10-10-2023	20-03-2026		3	0	1	1	0	20	22	7	0	
+FOUCHER THIBAULT	044 - MAISON SAINT CHARLES - MISSILLAC	30-10-2023	30-06-2024		0	0	0	0	0	1	3	0	0	
+FOUCHER THIBAULT	004 - restructuration piscine du TIR - PARIS	06-01-2024	31-12-2025		8	1	1	2	0	2	2	2	0	
+FOUCHER THIBAULT	047 - VALDYS	08-01-2024	31-12-2024		0	0	0	0	0	7	10	0	0	
+FOUCHER THIBAULT	048 - hotel MERCURE - QUIBERON	08-01-2024	31-12-2024		5	0	6	2	0	19	24	0	5	
+FOUCHER THIBAULT	009 - piscine des Métairies - remplacement générateur UV - NIVILLAC	08-01-2024	31-12-2025		0	0	0	0	0	2	2	0	0	
+FOUCHER THIBAULT	050 - modification de la production d énergies - MACHECOUL	24-01-2024	31-12-2024		2	0	1	0	0	1	3	0	1	
+FOUCHER THIBAULT	052 - AQUATONIC - SAINT GREGOIRE	22-03-2024	28-07-2024		1	0	0	1	0	11	6	0	0	
+FOUCHER THIBAULT	053 - extension / rénovation énergétique piscine Espace Dauphins - CHATEAUBRIANT	22-03-2024	28-02-2026		3	0	1	0	0	19	20	5	0	
+FOUCHER THIBAULT	055 - CENTER PARCS - VILLAGE NATURE PARIS (LIFTER)	28-03-2024	12-07-2024		4	0	0	0	0	9	18	1	2	
+FOUCHER THIBAULT	054 - AQUALAGON - 77	29-03-2024	31-12-2025		1	0	0	0	0	1	1	0	0	
+FOUCHER THIBAULT	058 - rénovation de la piscine Château-Landon - PARIS	15-05-2024	31-05-2024		1	0	1	2	0	19	16	3	0	
+FOUCHER THIBAULT	051 - construction d'un centre aquatique - CARQUEFOU	01-06-2024	03-10-2026		5	0	1	0	0	0	0	0	0	
+FOUCHER THIBAULT	059 - AQUALIS - travaux d'amélioration énergétique - GOUVIEUX	21-06-2024	31-01-2025		2	0	1	1	0	11	11	8	2	
+FOUCHER THIBAULT	061 - SALLE DES NOUELLES - rénovation énergétique - LE LANDREAU	23-07-2024	24-07-2025		2	0	1	1	0	12	9	0	0	
+FOUCHER THIBAULT	062 - rénovation de la pataugeoire - parc des Hautes Ourmes - RENNES	03-09-2024	31-07-2025		2	0	1	1	0	8	2	2	0	
+FOUCHER THIBAULT	001 - Charly GUITTON 2025	25-10-2024	31-12-2025		0	0	0	0	0	2	2	0	0	
+FOUCHER THIBAULT	002 - Jerome GUILLET 2025	25-10-2024	31-12-2025		0	0	0	0	0	5	6	0	0	
+FOUCHER THIBAULT	003 - Vincent SALOMON 2025	25-10-2024	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	004 - Romain DUMONT 2025	25-10-2024	31-12-2025		0	0	0	0	0	1	3	0	0	
+FOUCHER THIBAULT	005 - centre aquatique du Moustoir - LORIENT	25-10-2024	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	001 - Nicolas GRELLIER 2025	06-11-2024	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	002 - petits travaux TE 2025	26-11-2024	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	007 - GANTERIE - modification locaux chlore piscine - POITIERS	29-11-2024	31-12-2025		0	0	0	0	0	0	0	0	1	
+FOUCHER THIBAULT	003 - réhabilitation du centre aquatique OCEABUL - ST JEAN DE MONTS	17-12-2024	20-03-2026		5	0	1	2	0	25	14	0	0	
+FOUCHER THIBAULT	008 - installation generateurs UV - POUZAUGES	19-12-2024	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	006 - GLISSEO - remplacement des installations piscines et patinoires - CHOLET	16-01-2025	31-12-2025		1	0	1	2	0	8	0	0	3	
+FOUCHER THIBAULT	005 - réhabilitation piscine Alexandre Braud - ST MARS LA JAILLE	16-01-2025	21-05-2026		5	0	1	2	0	0	0	0	0	
+FOUCHER THIBAULT	010 - mise en service Gouvieux	23-01-2025	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	011 - mise en service Belliard	23-01-2025	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	008 - operation de construction Nouvelle Maison ROCHAS - MAUGES S/LOIRE	28-01-2025	10-12-2026		3	0	1	0	0	2	1	0	0	
+FOUCHER THIBAULT	009 - construction médiathèque - AVRILLE	29-01-2025	31-12-2025		2	0	2	0	0	0	0	0	0	
+FOUCHER THIBAULT	013 - AQUA VAL - travaux coupure technique - MONTEVRAIN (77)	19-02-2025	31-12-2025		0	0	0	0	0	2	2	0	0	
+FOUCHER THIBAULT	010 - réhabilitation et extension piscine - LA CRECHE	11-03-2025	31-12-2025		2	0	1	1	0	2	1	2	0	
+FOUCHER THIBAULT	011 - EFS CENTRE PAYS DE LA LOIRE	11-03-2025	31-12-2025		3	0	1	2	0	9	2	0	0	
+FOUCHER THIBAULT	012 - rénovation chaufferie Résidence 38 rue de Bretagne - PARIS	18-03-2025	31-12-2025		0	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	013 - réhabilitation de la piscine de Caucriauville - LE HAVRE	24-04-2025	31-12-2025		1	0	1	1	0	2	0	0	2	
+FOUCHER THIBAULT	011 - DIVAQUATIC - Extension et rénovation piscine - LE LOROUX BOTTEREAU	09-08-2021	27-01-2023	12-04-2023	3	0	1	3	0	6	3	0	1	
+FOUCHER THIBAULT	029 - travaux de réaménagement Nantes camping - NANTES	21-11-2022	31-12-2023	12-07-2023	6	0	1	1	0	9	0	0	2	
+FOUCHER THIBAULT	034 - domaine de la Chataigneraie - Phase 1	30-01-2023	15-05-2024	28-09-2023	1	0	0	0	0	0	0	0	0	
+FOUCHER THIBAULT	015 - AQUASUD - rénovation / Réhabilitation du centre Aquatique - LE HOM	12-10-2021	30-04-2023	16-11-2023	1	1	1	1	0	6	5	0	2	
+FOUCHER THIBAULT	025 - travaux de rénovation piscine Pierre de Coubertin - CONCHES EN OUCHE	04-07-2022	30-06-2023	16-11-2023	3	0	1	1	0	0	0	0	2	
+FOUCHER THIBAULT	030 - BASEFUSCO - Construction d'un bassin d'entraînement - LANESTER	10-01-2023	31-12-2023	17-01-2024	0	0	1	1	0	0	0	0	0	
+HAMIDANE ZAKARIA	051 - centre pénitencier - ANGERS		31-12-2024		0	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	TFM MHS - 114431000020 - construction d'un ensemble hospitalo-universitaire	09-05-2021	31-12-2027		36	0	3	16	0	47	0	0	0	
+HAMIDANE ZAKARIA	015 - EHPAD LA HOUSSAIS - REZE	21-03-2022	31-12-2024		12	0	0	0	0	34	33	3	0	
+HAMIDANE ZAKARIA	016 - LES NOBELS - résidentialisation de 193 logements - ST HERBLAIN	04-04-2022	23-12-2024		3	0	0	2	0	4	1	0	0	
+HAMIDANE ZAKARIA	019 - BE GREEN - Construction de 6 plateaux de bureaux - NANTES	04-05-2022	31-05-2024		4	0	1	5	0	43	22	11	0	
+HAMIDANE ZAKARIA	021 - PARC OT - Construction immeuble de bureaux - ST HERBLAIN	16-05-2022	30-08-2024		3	0	1	0	0	4	6	0	5	
+HAMIDANE ZAKARIA	022 - ILOT ADAM - Plateau de bureaux - NANTES	19-05-2022	31-05-2024		7	0	0	3	0	38	57	0	0	
+HAMIDANE ZAKARIA	TFM MHS - 114431000028 - CHPG - MONACO	14-11-2022	31-12-2025		2	0	0	0	0	7	2	1	0	
+HAMIDANE ZAKARIA	030 - Caisse d'épargne - aménagement plateau de bureau - CESSON SEVIGNE	14-12-2022	07-07-2023		1	0	0	1	0	7	3	0	1	
+HAMIDANE ZAKARIA	038 - Lycée Louis-Antoine de Bougainville - NANTES	05-06-2023	31-08-2029		1	0	0	4	0	26	14	3	0	
+HAMIDANE ZAKARIA	041 - FUJI - bâtiments I-J - NANTES	23-08-2023	15-05-2025		1	0	0	1	0	15	6	6	0	
+HAMIDANE ZAKARIA	044 - AIRBUS MID BUFFER	13-09-2023	31-05-2024		1	0	0	2	0	3	3	0	1	
+HAMIDANE ZAKARIA	043 - LES ROCHES ROUGES - hôtel - LA BAULE	19-09-2023	31-12-2024		2	0	1	3	0	6	2	4	0	
+HAMIDANE ZAKARIA	045 - LA FLEURIAYE - CARQUEFOU	06-11-2023	06-11-2025		3	0	1	1	0	32	13	13	0	
+HAMIDANE ZAKARIA	052 - LES REFLETS DE LOIRE - travaux d amenagement - NANTES	28-11-2023	30-08-2024		3	0	1	2	0	7	2	0	1	
+HAMIDANE ZAKARIA	047 - résidence MOULIN DU BOIS - SAINT-HERBLAIN	07-12-2023	31-03-2024		2	0	0	1	0	4	0	0	0	
+HAMIDANE ZAKARIA	053 - CEBPL - ORVAULT	19-12-2023	08-07-2024		1	0	0	1	0	12	9	0	0	
+HAMIDANE ZAKARIA	054 - petits travaux 2024	08-01-2024	31-12-2024		1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	057 - B&B NANTES ATLANTIS LE ZENITH	06-02-2024	31-12-2024		0	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	059 - SIEGE SILENE - extension et réhabilitation du siège - ST-NAZAIRE	04-03-2024	04-03-2026		4	0	1	2	0	16	12	1	0	
+HAMIDANE ZAKARIA	062 - ADAGIO - rénovation des installations - NANTES	23-05-2024	25-08-2025		1	0	0	1	0	0	0	1	0	
+HAMIDANE ZAKARIA	063 - GTC EHPAD LE RANZAY - mise en place d'une GTC en chaufferie - NANTES	06-06-2024	06-10-2024		1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	070 - CHU - restructuration du service accueil des urgences - CHOLET	24-06-2024	06-11-2026		2	0	1	1	0	16	2	1	0	
+HAMIDANE ZAKARIA	064 - EPF - construction campus universitaire - SAINT NAZAIRE	26-06-2024	30-04-2025		2	0	1	1	0	20	20	2	0	
+HAMIDANE ZAKARIA	065 - POULIGOU - travaux d'amélioration énergétique - PORNICHET	27-06-2024	08-08-2024		2	0	1	1	0	2	0	0	0	
+HAMIDANE ZAKARIA	066 - ECOLE ERLON - réaménagement de 3 niveaux de bureaux - NANTES	01-07-2024	30-09-2024		1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	067 - AUTOGREEN - construction de 65 logements et locaux tertiaires - STHERBLAIN	18-07-2024	31-12-2025		1	0	0	2	0	0	0	0	0	
+HAMIDANE ZAKARIA	001 - petits travaux 2025 / 9815	25-11-2024	31-12-2025		0	0	0	0	0	2	1	0	0	
+HAMIDANE ZAKARIA	006 - TECHNICENTRE PERE - Construction de l'Atelier Sud Loire BLOTTEREAU	03-12-2024	13-11-2026		3	0	0	0	0	19	0	0	0	
+HAMIDANE ZAKARIA	002 - TECHNICENTRE FILS	20-12-2024	13-11-2026		6	0	1	1	0	9	5	0	0	
+HAMIDANE ZAKARIA	003 - CEBPL FLEX2 - Aménagement des plateaux de bureaux - ORVAULT	02-01-2025	31-04-2025		2	0	0	2	0	5	2	1	0	
+HAMIDANE ZAKARIA	004 - RCU - Raccordement au réseau de chaleur urbain - NANTES	15-01-2025	30-06-2025		8	0	0	1	0	8	0	0	0	
+HAMIDANE ZAKARIA	005 - GRENAPIN - Construction d'une résidence autonome, étudiante et crèche	20-02-2025	31-08-2027		3	0	1	1	0	2	2	0	0	
+HAMIDANE ZAKARIA	007 - AIRBUS - Extension GC43 - MONTOIR-DE-BRETAGNE	14-04-2025	28-10-2025		1	0	0	2	0	2	0	0	0	
+HAMIDANE ZAKARIA	008 - BAINS SUR OUST - rénovation de la salle polyvalente - ILE ET VILAINE	06-06-2025	31-10-2025		1	0	1	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	024 - Travaux de ventilation cuisine siège Keran - NANTES	23-06-2022	31-12-2023	12-04-2023	1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	029 - CCM ANCENIS - MESANGER	06-12-2022	31-03-2023	16-05-2023	1	0	0	0	0	0	0	0	1	
+HAMIDANE ZAKARIA	034 - JULES VERNE - réaménagement dans une clinique privée - NANTES - A ANNULER	01-02-2023	31-12-2024	20-10-2023	0	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	035 - INNOVAL - régulation et raccordement électriques - SUCE SUR ERDRE	15-02-2023	31-05-2023	20-10-2023	0	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	036 - raccordement électrique chaudières bois - Chaufferie BODELIO - LORIENT	10-05-2023	30-06-2023	20-10-2023	0	0	0	0	0	3	1	0	0	
+HAMIDANE ZAKARIA	037 - LES ALCEAS - remplacement ballons thermodynamiques - REZE	15-05-2023	30-09-2023	17-01-2024	1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	039 - bureau IN&MAA	03-07-2023	31-07-2023	17-01-2024	1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	004 - L'Esplanade - Construction de 114 logements et commerces - RENNES	07-04-2021	30-04-2023	14-02-2024	4	0	1	4	0	22	11	0	5	
+HAMIDANE ZAKARIA	010 - MINOPOLIS - Construction de bureaux - REZE	15-12-2021	24-04-2023	14-02-2024	3	0	1	2	0	4	5	0	5	
+HAMIDANE ZAKARIA	032 - Petits travaux 2023	01-01-2023	01-01-2024	14-02-2024	0	0	0	0	0	3	0	0	0	
+HAMIDANE ZAKARIA	042 - B&B NANTES AEROPORT	30-08-2023	30-10-2023	09-04-2024	1	0	0	0	0	0	0	0	0	
+HAMIDANE ZAKARIA	014 - ECLANOVA - construction de 26 logements collectifs - RENNES	31-01-2022	31-12-2023	14-06-2024	2	0	1	1	0	12	9	0	3	
+HAMIDANE ZAKARIA	058 - TRAVAUX DIVERS CHU - NANTES	01-03-2024	31-12-2024	13-12-2024	1	0	0	0	0	0	0	0	0	
+NAVET MATTHIEU	008 - FUSION - ILOT F - Activités - Bureaux - Hôtel - Logements - NANTES	28-10-2021	31-05-2024		2	0	1	1	0	18	19	0	1	
+NAVET MATTHIEU	011 - ARBOREA - construction de 57 logements - ANGERS	29-09-2022	30-06-2024		1	1	1	2	0	25	24	0	0	
+NAVET MATTHIEU	020 - ARBOREA - construction de 57 logements - ANGERS - ELEC	29-09-2022	30-06-2024		1	0	0	0	0	8	3	0	0	
+NAVET MATTHIEU	012 - STREAM - construction de 24 logements - NANTES	01-12-2022	31-10-2023		2	0	1	1	0	15	25	0	1	
+NAVET MATTHIEU	013 - CARAT - construction de 21 logements - NANTES	05-12-2022	31-05-2024		2	0	1	1	0	18	18	0	1	
+NAVET MATTHIEU	014 - LAØME PC1 T2 - construction de 62 logements - NANTES	08-12-2022	31-12-2023		0	0	1	1	0	10	20	1	0	
+NAVET MATTHIEU	015 - MATERA - construction de 81 logements - NANTES	14-12-2022	05-12-2024		3	2	0	2	0	26	10	2	0	
+NAVET MATTHIEU	016 - construction de 14 logements - MOUTIERS EN RETZ	21-12-2022	31-12-2023		3	0	1	1	0	3	4	0	1	
+NAVET MATTHIEU	021 - Construction de 14 logements - MOUTIERS EN RETZ - ELEC	21-12-2022	31-12-2023		1	0	0	1	0	1	0	0	1	
+NAVET MATTHIEU	022 - Construction de 32 logements individuels - ST PERE-EN-RETZ - ELEC	21-12-2022	30-01-2024		3	0	0	1	0	1	0	0	1	
+NAVET MATTHIEU	017 - construction de 32 logements individuels - ST PERE-EN-RETZ	21-12-2022	31-01-2024		3	0	1	1	0	2	3	0	1	
+NAVET MATTHIEU	023 - ECLOZ - construction de 83 logements collectifs et bureaux - NANTES	20-02-2023	20-08-2024		2	0	0	1	0	17	32	0	0	
+NAVET MATTHIEU	024 - COUR MONSELET - construction de 120 logements collectifs - NANTES	04-04-2023	09-09-2025		2	0	2	3	0	31	42	1	3	
+NAVET MATTHIEU	025 - FUJI - bâtiments A-B-C-D-E-F-G-H - NANTES	15-02-2023	30-12-2025		2	2	0	1	0	8	22	0	0	
+NAVET MATTHIEU	026 - FUJI - bâtiment K - NANTES	23-08-2023	15-05-2025		2	0	0	0	0	3	0	0	0	
+NAVET MATTHIEU	027 - CARRE DES OFFICIERS - construction de 51 logements - NANTES	29-08-2023	01-07-2024		1	0	0	1	0	23	30	0	0	
+NAVET MATTHIEU	030 - AGATES - construction de 23 logements - PORNICHET	05-10-2023	30-06-2025		3	0	1	2	0	8	8	0	0	
+NAVET MATTHIEU	032 - LES BOIS D ANGERS - immeuble de 75 logements et crèche	27-10-2023	27-06-2025		4	0	4	1	0	18	16	15	0	
+NAVET MATTHIEU	033 - LES BOIS D ANGERS - immeuble de 75 logements et crèche - ELEC	27-10-2023	27-06-2025		4	0	4	1	0	1	0	0	0	
+NAVET MATTHIEU	031 - Résidence SILVA TERRA STILLA - NANTES	30-10-2023	09-10-2025		2	0	1	1	0	16	7	1	0	
+NAVET MATTHIEU	034 - CHRYSALIDE - immeuble à usage de logements et locaux d activites - AVRILLE	01-12-2023	01-12-2025		1	0	0	3	0	23	14	1	0	
+NAVET MATTHIEU	035 - PITRE CHEVALIER - construction de 37 logements collectifs - PAIMBOEUF	22-12-2023	15-07-2024		3	1	1	1	0	5	7	0	0	
+NAVET MATTHIEU	037 - petits travaux 2024	01-01-2024	31-12-2024		6	0	0	0	0	8	6	0	0	
+NAVET MATTHIEU	004 - SAV 9813	14-01-2024	31-12-2025		0	0	0	0	0	16	4	0	0	
+NAVET MATTHIEU	038 - AMARYLLIS - NANTES	25-01-2024	25-02-2026		2	0	0	1	0	15	13	1	0	
+NAVET MATTHIEU	039 - MY CAMPUS ; CHATEAUBRIAND - RENNES	08-02-2024	31-12-2025		2	1	0	0	0	6	16	0	0	
+NAVET MATTHIEU	040 - ANGORA - construction de 159 logements et espace partagé ADOMA - LAVAL	07-03-2024	10-04-2026		11	0	1	3	0	19	17	0	0	
+NAVET MATTHIEU	041 - BIPLAN - construction de 67 logements collectifs - ANGERS	03-04-2024	02-01-2026		5	0	1	1	0	16	12	1	0	
+NAVET MATTHIEU	046 - EHPAD LA CERISAIE - ACHT210404-réhabilitation réseaux EC sanitaire- NANTES	21-05-2024	20-10-2025		1	0	0	1	0	25	11	0	0	
+NAVET MATTHIEU	045 - GENDARMERIE - réhabilitation et construction de 53 logements - ANCENIS	21-05-2024	21-12-2025		4	0	1	1	0	20	7	2	0	
+NAVET MATTHIEU	051 - EPHAD OCEANE - remise en conformité de l'installation ES - NANTES	15-07-2024	31-12-2024		1	0	0	1	0	18	9	0	0	
+NAVET MATTHIEU	052 - BECQUEREL - réhabilitation de 220 logements collectifs - NANTES	18-07-2024	18-07-2025		4	0	0	2	0	34	18	1	0	
+NAVET MATTHIEU	053 - ENEDIS -  études	18-07-2024	18-07-2025		0	0	0	0	0	0	0	0	0	
+NAVET MATTHIEU	054 - SEMARD - construction et rénovation de 23 logements - REZE	12-08-2024	12-12-2025		3	0	1	1	0	7	3	1	0	
+NAVET MATTHIEU	055 - SEMARD - construction et rénovation de 23 logements - REZE - ELEC	12-08-2024	12-12-2025		4	0	1	1	0	1	2	0	0	
+NAVET MATTHIEU	057 - ECLOZ - construction de 28 logements collectifs - bât D - NANTES	27-09-2024	27-12-2025		2	0	1	2	0	4	5	1	0	
+NAVET MATTHIEU	058 - petits travaux électricité 2024	30-09-2024	30-12-2024		1	0	0	0	0	2	1	0	0	
+NAVET MATTHIEU	001 - Réhabilitation de la résidences Berthauderie-Robespierre - ST NAZAIRE	30-10-2024	30-04-2026		7	0	2	2	0	2	1	9	0	
+NAVET MATTHIEU	002 - PENFELD - Restructuration d'une résidence de 171 logements - ORVAULT	12-11-2024	30-06-2026		2	0	0	3	0	12	3	9	0	
+NAVET MATTHIEU	003 - petits travaux 2025 / 9813	25-11-2024	31-12-2025		0	0	0	0	0	2	1	0	0	
+NAVET MATTHIEU	002 - LES CONFLUENCES - construction de 67 logements - CHALONNES SUR LOIRE	26-11-2024	26-09-2026		3	0	1	1	0	13	4	0	0	
+NAVET MATTHIEU	003 - ESPLANADE 2 - construction de 113 logements - RENNES	05-03-2025	30-09-2026		4	0	1	3	0	0	0	0	0	
+NAVET MATTHIEU	005 - JEAN MONNET - Réaménagement de l'école maternelle - HERIC	31-03-2025	30-11-2026		1	0	0	1	0	2	1	0	0	
+NAVET MATTHIEU	006 - HOTEL MERCURE - rénovation installation d'une chaufferie - NANTES	29-04-2025	30-09-2025		0	0	0	0	0	2	0	0	0	
+NAVET MATTHIEU	018 - PRISMA - construction de 14 logements - LES SORINIERES	12-01-2023	31-12-2023	16-05-2023	1	0	1	1	0	4	0	0	0	
+NAVET MATTHIEU	019 - Petits travaux 2023	01-01-2023	01-01-2024	12-02-2024	0	0	0	0	0	0	0	0	0	
+NAVET MATTHIEU	003 - COKOON - construction de 148 logements - ANGERS	26-03-2021	05-01-2024	14-06-2024	3	1	1	2	0	24	18	1	3	
+NAVET MATTHIEU	005 - PERSAGOTIERE ILOT 2 - construction de 105 logements - NANTES	11-06-2021	31-12-2023	14-06-2024	1	0	1	2	0	18	26	0	3	
+NAVET MATTHIEU	036 - résidence GARENNE DE PILLEUX - NANTES	09-01-2023	31-12-2023	18-01-2025	6	0	0	1	0	1	0	0	0	
+NAVET MATTHIEU	044 - JAVELOT	21-05-2024	28-02-2025	12-02-2025	0	0	0	0	0	0	0	0	0	
+NAVET MATTHIEU	056 - CIS - remplacement de chaudière  - ST JOACHIM - TRIGNAC - VARADES	25-09-2024	29-11-2024	12-02-2025	6	0	1	1	0	5	6	0	0	
+RICHARDEAU CHRISTOPHE	2814000393 - Rénovation Parking P2 ORLY / Bouygues	09-01-2023	28-08-2026		0	0	0	0	0	12	8	1	0	
+RICHARDEAU CHRISTOPHE	2814000395 - Lycée de Sartrouville / Bouygues	01-02-2023	31-01-2025		0	0	0	0	0	27	55	0	0	
+RICHARDEAU CHRISTOPHE	2814000394 - Hôpital Fondation Rothschild  phase 0 / SPIE	01-02-2023	30-01-2026		2	0	1	1	0	47	52	0	0	
+RICHARDEAU CHRISTOPHE	9816000003 - Chantier Divers 2025	02-01-2025	31-12-2025		0	0	0	0	0	2	1	0	0	
+RICHARDEAU CHRISTOPHE	9816000002 - Puits Y, RSM, NLF Ligne 15 / Fayat	07-02-2025	31-07-2025		0	0	0	0	0	2	1	0	0	
+RICHARDEAU CHRISTOPHE	9816000001 - Salles blanches Hôpital ROTHSCHILD / SPIE BATIGNOLLES	02-06-2025	30-04-2026		0	0	0	0	0	1	4	0	0	
+RICHARDEAU CHRISTOPHE	9816000006 - CHATEAU ROUVILLE - RESTAURATION MAISON DE CHASSE	10-06-2025	30-03-2026		0	0	0	0	0	2	0	0	0	
+RICHARDEAU CHRISTOPHE	2811000038 Réhabilitation d'un ensemble Immobilier - Chantier L1VE / EIFFAGE	01-02-2021	30-06-2023	04-10-2022	0	0	0	0	0	7	21	0	3	
+RICHARDEAU CHRISTOPHE	2813000492 SAV BOUYGUES 2022	21-01-2022	31-01-2023	31-01-2023	0	0	0	0	0	0	0	0	0	
+RICHARDEAU CHRISTOPHE	2811000044 Construction du nouveau siège France de Lidl / EIFFAGE	07-03-2022	29-12-2023	29-09-2023	0	0	0	0	0	35	40	0	0	
+RICHARDEAU CHRISTOPHE	2814000400 - Restaurant Japonais - Le Cheval Blanc / LVMH	18-09-2023	22-12-2023	22-12-2023	0	0	0	0	0	0	0	0	0	
+RICHARDEAU CHRISTOPHE	2814000391 - Travaux Divers 2023	12-12-2022	28-02-2023	29-12-2023	0	0	0	0	0	0	0	0	0	
+RICHARDEAU CHRISTOPHE	2811000043 - TREMBLAY - Rénovation Thermique du lycée Léonard de Vinci / CITY GC	01-06-2021	29-09-2023	12-01-2024	0	0	0	0	0	7	6	0	0	
+RICHARDEAU CHRISTOPHE	2813000493 - Construction SAS NOISY LE GRAND - BOUYGUES	01-07-2022	30-09-2023	01-04-2024	0	0	0	0	0	33	50	0	0	
+RICHARDEAU CHRISTOPHE	2813000502 - Travaux supplémentaire Le DIX	08-11-2023	31-12-2024	06-05-2024	0	0	0	0	0	29	30	0	0	
+RICHARDEAU CHRISTOPHE	2814000390 - Immeuble de bureaux PANTIN / HEIR INVEST	02-09-2022	29-11-2024	31-05-2024	0	0	2	0	0	9	21	1	0	
+RICHARDEAU CHRISTOPHE	2814000402 - Projet T1 T2 bureaux - Disneyland / AXESS	23-10-2023	30-11-2024	31-05-2024	0	0	0	0	0	8	6	0	0	
+RICHARDEAU CHRISTOPHE	2814000392 - 35 Logements VANVES L'ECRIN / Bouygues Immo	09-01-2023	30-08-2024	30-08-2024	0	0	0	1	0	10	12	0	0	
+RICHARDEAU CHRISTOPHE	2814000381 - Saint Denis pleyel / BESIX	04-01-2021	30-08-2024	31-10-2024	1	0	1	3	0	47	34	4	0	
+RICHARDEAU CHRISTOPHE	2814000384 - IP13 - Désenfumage ZF02 / CHANTIERS MODERNES	14-03-2021	28-04-2023	07-02-2025	0	0	0	0	0	1	0	0	0	
+RICHARDEAU CHRISTOPHE	2814000401 - P18 Piscine Belliard / Bouygues	02-11-2023	29-08-2025	29-08-2025	0	0	0	0	0	16	25	0	0	
+RICHARDEAU CHRISTOPHE	2814000403 - Château de Gaillon / Agglo SEINE EURE	08-01-2024	29-08-2025	29-08-2025	2	0	0	1	0	1	1	0	0	
+RICHARDEAU CHRISTOPHE	2814000396 - Piscine de Pompey	30-03-2023	31-10-2025	31-12-2025	1	0	1	0	0	17	13	0	0	
+RICHARDEAU CHRISTOPHE	9816000005 - Réhabilitation du Château de Menars / ADF	05-05-2025	29-08-2025	31-12-2025	0	0	0	0	0	2	0	0	0	
+RICHARDEAU CHRISTOPHE	9816000004 - Travaux CVCD Phase 1 / Fondation Rothschild	03-02-2025	31-12-2026	31-12-2026	0	0	0	0	0	0	0	0	0	
+Total					424	12	109	198	0	1882	1674	157	130	`;
+
+        // Split the data into lines and exclude the global 'Total' row at the very end
+        const lines = data.trim().split('\n');
+        const headerLine = lines[0];
+        // Exclude the header and the global total line from project data
+        const projectLines = lines.slice(1, lines.length - 1); 
+
+        // Parse all raw headers, trimming whitespace
+        const rawHeaders = headerLine.split('\t').map(h => h.trim()); 
+
+        // Define headers for displaying in the table (excluding 'Manager')
+        const tableDisplayHeaders = rawHeaders.filter(header => header !== '' && header !== 'Manager');
+
+        // Parse project data into an array of objects
+        const projects = projectLines.map(line => {
+            const values = line.split('\t').map(v => v.trim()); // Trim values for each cell
+            const project = {};
+            rawHeaders.forEach((header, index) => { // Use rawHeaders to ensure all original columns are mapped
+                if (header !== '') { // Only map if the header name is not empty
+                    project[header] = values[index] !== undefined ? values[index] : '';
+                }
+            });
+            return project;
+        });
+
+        // Function to extract a sortable number from the project label
+        function getProjectSortNumber(projectLabel) {
+            let match;
+            // Try to match leading digits (e.g., "004")
+            match = projectLabel.match(/^(\d+)/);
+            if (match && match[1]) {
+                return parseInt(match[1], 10);
+            }
+            // Try to match digits after "TFM MHS - " (e.g., "114431000020")
+            match = projectLabel.match(/TFM MHS - (\d+)/);
+            if (match && match[1]) {
+                return parseInt(match[1], 10);
+            }
+            // If no specific numeric pattern found, return Infinity to sort them at the end
+            return Infinity;
+        }
+
+        // Group projects by manager
+        const projectsByManager = projects.reduce((acc, project) => {
+            const manager = project['Manager'];
+            if (!acc[manager]) {
+                acc[manager] = [];
+            }
+            acc[manager].push(project);
+            return acc;
+        }, {});
+
+        // Define columns for which pie charts will be generated
+        const requestedPieChartColumns = ['Acte Engagt', 'CCAG', 'CCAP', 'CCTP', 'PPSPS', 'PV Récept'];
+
+        // Get the container for the accordion
+        const accordionContainer = document.querySelector('.accordion-container');
+
+        // Iterate over each manager to create an accordion item
+        Object.keys(projectsByManager).forEach(manager => {
+            const managerProjects = projectsByManager[manager];
+
+            // Sort managerProjects numerically by project label, then alphabetically if numbers are same
+            managerProjects.sort((a, b) => {
+                const numA = getProjectSortNumber(a['Libellé Projet']);
+                const numB = getProjectSortNumber(b['Libellé Projet']);
+
+                // Sort numerically first
+                if (numA !== numB) {
+                    return numA - numB;
+                }
+                // If numbers are the same or both are Infinity (non-numeric),
+                // then sort alphabetically by Libellé Projet
+                return a['Libellé Projet'].localeCompare(b['Libellé Projet']);
+            });
+
+            // Create accordion item element
+            const accordionItem = document.createElement('div');
+            accordionItem.classList.add('accordion-item');
+
+            // Create accordion header
+            const accordionHeader = document.createElement('div');
+            accordionHeader.classList.add('accordion-header');
+            accordionHeader.innerHTML = `${manager} <span class="arrow right"></span>`;
+            accordionHeader.tabIndex = 0; // Make header focusable for accessibility
+
+            // Create accordion content (where the table and charts will be)
+            const accordionContent = document.createElement('div');
+            accordionContent.classList.add('accordion-content');
+
+            // --- Pie Charts Section (moved above column toggles) ---
+            const chartSection = document.createElement('div');
+            chartSection.classList.add('chart-section');
+            accordionContent.appendChild(chartSection);
+
+            requestedPieChartColumns.forEach(colName => {
+                let countWithValue = 0;
+                let countWithoutValue = 0;
+
+                managerProjects.forEach(project => {
+                    // Check if the value for the specific column is present and not '0' or empty
+                    const value = project[colName] ? project[colName].trim() : '';
+                    if (value !== '' && value !== '0') {
+                        countWithValue++;
+                    } else {
+                        countWithoutValue++;
+                    }
+                });
+
+                // Only create a chart if there are projects to represent
+                if (countWithValue > 0 || countWithoutValue > 0) {
+                    const chartContainer = document.createElement('div');
+                    chartContainer.classList.add('chart-container');
+                    chartContainer.innerHTML = `<h4>${colName}</h4><canvas></canvas>`;
+                    chartSection.appendChild(chartContainer);
+
+                    const ctx = chartContainer.querySelector('canvas').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Avec Valeur', 'Sans Valeur'],
+                            datasets: [{
+                                data: [countWithValue, countWithoutValue],
+                                backgroundColor: ['#28a745', '#dc3545'], // Green for value, Red for no value
+                                hoverBackgroundColor: ['#218838', '#c82333']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false // Hide legend as titles are descriptive
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.raw;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                            return `${label}: ${value} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            // --- Column Toggle Buttons ---
+            const columnToggleButtonsDiv = document.createElement('div');
+            columnToggleButtonsDiv.classList.add('column-toggle-buttons');
+            accordionContent.appendChild(columnToggleButtonsDiv);
+
+            const columnVisibility = {}; // Track visibility state of each column
+
+            tableDisplayHeaders.forEach(header => {
+                columnVisibility[header] = true; // All columns visible by default
+
+                const button = document.createElement('button');
+                button.textContent = header;
+                button.classList.add('active'); // Mark as active initially
+                button.dataset.column = header;
+                columnToggleButtonsDiv.appendChild(button);
+
+                button.addEventListener('click', () => {
+                    columnVisibility[header] = !columnVisibility[header];
+                    button.classList.toggle('active', columnVisibility[header]);
+                    // Re-render table or toggle column visibility based on header name
+                    // Re-render approach is simpler for full table control
+                    renderTable();
+                });
+            });
+
+
+            // --- Project Table ---
+            const projectTable = document.createElement('table');
+            accordionContent.appendChild(projectTable);
+
+            function renderTable() {
+                projectTable.innerHTML = ''; // Clear existing table content
+
+                // Create table header row
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                tableDisplayHeaders.forEach(header => {
+                    if (columnVisibility[header]) {
+                        const th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    }
+                });
+                thead.appendChild(headerRow);
+                projectTable.appendChild(thead);
+
+                // Create table body
+                const tbody = document.createElement('tbody');
+                managerProjects.forEach(project => {
+                    const row = document.createElement('tr');
+                    tableDisplayHeaders.forEach(header => {
+                        if (columnVisibility[header]) {
+                            const td = document.createElement('td');
+                            td.textContent = project[header];
+                            row.appendChild(td);
+                        }
+                    });
+                    tbody.appendChild(row);
+                });
+                projectTable.appendChild(tbody);
+            }
+
+            renderTable(); // Initial render of the table
+
+            accordionItem.appendChild(accordionHeader);
+            accordionItem.appendChild(accordionContent);
+            accordionContainer.appendChild(accordionItem);
+
+            // Add event listener to toggle accordion content
+            accordionHeader.addEventListener('click', () => {
+                const arrow = accordionHeader.querySelector('.arrow');
+                if (accordionContent.classList.contains('show')) {
+                    accordionContent.classList.remove('show');
+                    arrow.classList.remove('down');
+                    arrow.classList.add('right');
+                } else {
+                    // Close other open accordions before opening the current one
+                    document.querySelectorAll('.accordion-content.show').forEach(openContent => {
+                        openContent.classList.remove('show');
+                        openContent.previousElementSibling.querySelector('.arrow').classList.remove('down');
+                        openContent.previousElementSibling.querySelector('.arrow').classList.add('right');
+                    });
+                    accordionContent.classList.add('show');
+                    arrow.classList.remove('right');
+                    arrow.classList.add('down');
+                }
+            });
+
+            // Add keyboard accessibility for accordion headers
+            accordionHeader.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault(); // Prevent scrolling when space is pressed
+                    accordionHeader.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

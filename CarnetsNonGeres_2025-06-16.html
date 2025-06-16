@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carnets non gérés par Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Styles de base pour le corps et le conteneur principal */
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8; /* Light gray background */
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2rem !important; /* Taille de police modifiée à 2rem */
+            font-weight: 600 !important; /* Poids de police modifié à 600 */
+            margin-bottom: 10px; /* Réduit la marge pour rapprocher la légende */
+            text-align: center;
+        }
+
+        .legend {
+            text-align: center;
+            margin-bottom: 30px; /* Espace sous la légende */
+            font-size: 0.95rem;
+            color: #555;
+        }
+        .legend span {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .legend .orange-box {
+            background-color: #fbd38d; /* Correspond à bg-orange-200 */
+        }
+        .legend .red-box {
+            background-color: #feb2b2; /* Correspond à bg-red-200 */
+        }
+
+
+        /* Styles for manager headers (accordion elements) */
+        .manager-header {
+            background-color: #4a90e2; /* Blue header */
+            color: white;
+            font-weight: 600;
+            padding: 15px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease; /* Smooth transition on hover */
+        }
+        .manager-header:hover {
+            background-color: #357ABD; /* Darker blue on hover */
+        }
+        .manager-header .arrow {
+            transition: transform 0.3s ease; /* Transition for arrow rotation */
+        }
+        .manager-header.expanded .arrow {
+            transform: rotate(90deg); /* Arrow rotation when accordion is expanded */
+        }
+
+        /* New container for accordion content (including the table) */
+        .accordion-content {
+            border-radius: 8px; /* Apply to corners of the hideable block */
+            overflow: hidden; /* Crucial for hiding overflowing content and enabling max-height */
+            margin-top: 10px; /* Spacing between header and content */
+            opacity: 0; /* Hidden by default */
+            max-height: 0; /* Zero height by default */
+            transition: max-height 0.5s ease-out, opacity 0.3s ease-in; /* Smooth transitions */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Shadow for the block */
+        }
+        .accordion-content.show {
+            opacity: 1; /* Visible when accordion is expanded */
+            max-height: 1000px; /* Sufficient height to display content (adjust if needed) */
+        }
+
+        /* Styles for project tables (the table itself) */
+        .project-table {
+            width: 100%;
+            border-collapse: collapse; /* Keeps borders merged */
+            /* Removed border/shadow/overflow/margin-top/transition/opacity/max-height styles that are now on .accordion-content */
+        }
+        .project-table th, .project-table td {
+            padding: 12px 18px;
+            text-align: left;
+            border-bottom: 1px solid #e0e6ed; /* Bottom border for cells */
+
+        }
+        .project-table th {
+            background-color: #6aabff; /* Lighter blue for sub-headers */
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        .project-table tbody tr:nth-child(even) {
+            background-color: #f7f9fc; /* Light blue background for even rows */
+        }
+        .project-table tbody tr:hover {
+            background-color: #e6f7ff; /* Lighter blue on hover */
+            cursor: pointer;
+        }
+        .project-table td {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* Conditional row coloring styles */
+        .bg-orange-200 {
+            background-color: #fbd38d !important; /* Orange for > 50h */
+        }
+        .bg-red-200 {
+            background-color: #feb2b2 !important; /* Red for > 200h (previously 100h) */
+        }
+
+        /* Styles for global table footer */
+        tfoot {
+            font-weight: 700;
+            background-color: #e0e6ed;
+            border-top: 2px solid #ccd2d8;
+        }
+        tfoot td {
+            padding: 15px 18px;
+        }
+
+        /* Responsive adjustments for small screens (mobile) */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 2.2rem !important; /* Adjusted for mobile as well */
+            }
+            .legend {
+                font-size: 0.85rem;
+            }
+            .manager-header {
+                font-size: 1.1rem;
+                padding: 12px 15px;
+            }
+            /* Render table and its elements as "block" to stack them */
+            .project-table, .project-table thead, .project-table tbody, .project-table th, .project-table td, .project-table tr {
+                display: block;
+            }
+            /* Hide table header on mobile */
+            .project-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            .project-table tr {
+                margin-bottom: 10px;
+                border: 1px solid #e0e6ed;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .project-table td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            /* Add labels before each data cell on mobile */
+            .project-table td:before {
+                position: absolute;
+                top: 0;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 600;
+                color: #4a90e2;
+            }
+
+            /* Specific labels for each column */
+            .project-table td:nth-of-type(1):before { content: "Projet"; }
+            .project-table td:nth-of-type(2):before { content: "Responsable"; }
+            .project-table td:nth-of-type(3):before { content: "Heures non gérées"; }
+            .project-table td:nth-of-type(4):before { content: "Dernière MAJ carnet"; }
+
+            /* Footer adjustments on mobile */
+            tfoot {
+                display: block;
+                border-top: none;
+            }
+            tfoot td {
+                text-align: center;
+                border-bottom: none;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-container">
+    <h1>Carnets non gérés par Manager</h1>
+    <div class="legend">
+        Légende :
+        <span class="orange-box"> > 50h</span>
+        <span class="red-box"> > 200h</span>
+    </div>
+    <!-- Content will be dynamically generated by JavaScript here -->
+</div>
+
+<script>
+    // Raw data provided by the user
+    const rawData = [
+        ["FOUCHER THIBAULT", "042 - piscine MONTMORENCY", "114432000042", "POTIN KEVIN", "28-09-2023", "12-04-2024", "1", "48", "12-04-2024"],
+        ["FOUCHER THIBAULT", "048 - hotel MERCURE - QUIBERON", "114432000048", "GRELLIER NICOLAS", "08-01-2024", "31-12-2024", "1", "479", "28-11-2024"],
+        ["NAVET MATTHIEU", "006 - SAV", "114433000006", "FOUQUET GLENN", "02-08-2021", "31-12-2021", "1", "281", "27-02-2023"],
+        ["NAVET MATTHIEU", "013 - CARAT - construction de 21 logements - NANTES", "114433000013", "ANNE ALEXANDRE", "05-12-2022", "31-05-2024", "1", "272", "13-02-2024"],
+        ["NAVET MATTHIEU", "014 - LAØME PC1 T2 - construction de 62 logements - NANTES", "114433000014", "ORSONNEAU DENIS", "08-12-2022", "31-12-2023", "1", "204", "06-12-2024"],
+        ["NAVET MATTHIEU", "015 - MATERA - construction de 81 logements - NANTES", "114433000015", "ROGER ANTONY", "14-12-2022", "05-12-2024", "1", "134", "18-07-2024"],
+        ["NAVET MATTHIEU", "020 - ARBOREA - construction de 57 logements - ANGERS - ELEC", "114433000020", "RIGAUDEAU MICKAEL", "29-09-2022", "30-06-2024", "1", "184", "19-12-2024"],
+        ["NAVET MATTHIEU", "025 - FUJI - bâtiments A-B-C-D-E-F-G-H - NANTES", "114433000025", "CALLARD ANTHONY", "15-05-2023", "30-12-2025", "1", "191", "17-12-2024"],
+        ["NAVET MATTHIEU", "031 - Résidence SILVA TERRA STILLA - NANTES", "114433000031", "ROGER ANTONY", "30-10-2023", "09-10-2025", "1", "88", "29-11-2024"],
+        ["NAVET MATTHIEU", "033 - LES BOIS D ANGERS - immeuble de 75 logements et crèche - ELEC", "114433000033", "DUBOIS JULIEN", "27-10-2023", "27-06-2025", "1", "253", "18-12-2024"],
+        ["NAVET MATTHIEU", "034 - CHRYSALIDE - immeuble à usage de logements et locaux d activites - AVRILLE", "114433000034", "CARTIER CHARLES", "01-12-2023", "01-12-2025", "1", "118.5", "23-12-2024"],
+        ["NAVET MATTHIEU", "039 - MY CAMPUS ; CHATEAUBRIAND - RENNES", "114433000039", "GORON ANTHONY", "08-02-2024", "31-12-2025", "1", "97", "20-12-2024"],
+        ["NAVET MATTHIEU", "040 - ANGORA - construction de 159 logements et espace partagé ADOMA - LAVAL", "114433000040", "COLLAS JEROME", "07-03-2024", "10-04-2026", "1", "405", "24-12-2024"],
+        ["NAVET MATTHIEU", "041 - BIPLAN - construction de 67 logements collectifs - ANGERS", "114433000041", "CARTIER CHARLES", "03-04-2024", "02-01-2026", "1", "108", "20-12-2024"],
+        ["NAVET MATTHIEU", "046 - EHPAD LA CERISAIE - ACHT210404-réhabilitation réseaux EC sanitaire- NANTES", "114433000046", "BERGOT NOEL", "21-05-2024", "20-10-2025", "1", "51", "18-10-2024"],
+        ["RICHARDEAU CHRISTOPHE", "2814000394 - Hôpital Fondation Rothschild / SPIE", "112814000394", "VIRLOUVET JULIEN", "01-02-2023", "30-01-2026", "1", "146", "17-12-2024"],
+        ["RICHARDEAU CHRISTOPHE", "2814000395 - Lycée de Sartrouville / Bouygues", "112814000395", "GOMES JOSE-PIERRE", "01-02-2023", "31-01-2025", "1", "250", "23-06-2023"],
+        ["RICHARDEAU CHRISTOPHE", "2814000396 - Piscine de Pompey", "112814000396", "MECHIN SEBASTIEN", "30-03-2023", "31-10-2025", "1", "68", "17-12-2024"],
+        ["RICHARDEAU CHRISTOPHE", "2814000402 - Projet T1 T2 bureaux - Disneyland / AXESS", "112814000402", "VIO HERVE", "23-10-2023", "30-11-2024", "1", "56", "11-12-2024"]
+    ];
+
+    // Processes and groups data by manager
+    const groupedData = rawData.reduce((acc, row) => {
+        const manager = row[0]; // The first element is the manager
+        // Converts 'Valeur' to a number, handling the comma as a decimal separator
+        const unmanagedHours = parseFloat(row[7].replace(',', '.'));
+        const project = {
+            projectName: row[1],    // "Project Description" becomes "Project"
+            contact: row[3],        // "Contact" becomes "Responsible"
+            unmanagedHours: unmanagedHours, // "Value" becomes "Unmanaged hours"
+            lastUpdate: row[8]      // "Last Visa" becomes "Last notebook update"
+        };
+        if (!acc[manager]) {
+            acc[manager] = [];
+        }
+        acc[manager].push(project);
+        return acc;
+    }, {});
+
+    const appContainer = document.getElementById('app-container');
+    let totalUnmanagedHours = 0;
+    let totalProjects = 0;
+
+    // Iterates over grouped data to create accordion sections
+    for (const manager in groupedData) {
+        const projects = groupedData[manager];
+
+        // Creates the manager header (accordion trigger)
+        const managerHeader = document.createElement('div');
+        managerHeader.className = 'manager-header';
+        managerHeader.innerHTML = `
+            <span>${manager} (${projects.length} projets)</span>
+            <span class="arrow">▶</span>
+        `;
+        appContainer.appendChild(managerHeader);
+
+        // Creates a container for the accordion content (where the table will be inserted)
+        const accordionContentWrapper = document.createElement('div');
+        accordionContentWrapper.className = 'accordion-content';
+        appContainer.appendChild(accordionContentWrapper);
+
+        // Creates the project table for this manager (the table itself)
+        const projectTable = document.createElement('table');
+        projectTable.className = 'project-table';
+        projectTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Projet</th>
+                    <th>Responsable</th>
+                    <th>Heures non gérées</th>
+                    <th>Dernière MAJ carnet</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        `;
+        const tbody = projectTable.querySelector('tbody');
+
+        // Adds each project to the manager's table
+        projects.forEach(project => {
+            // Corrected: Use tbody.insertRow() to create a new row
+            const row = tbody.insertRow();
+            const hours = project.unmanagedHours;
+
+            // Applies conditional styling based on unmanaged hours
+            if (hours > 200) { // Condition changed to > 200h
+                row.classList.add('bg-red-200');
+            } else if (hours > 50) {
+                row.classList.add('bg-orange-200');
+            }
+
+            row.insertCell().textContent = project.projectName;
+            row.insertCell().textContent = project.contact;
+            // Displays unmanaged hours with French formatting (comma as decimal separator)
+            row.insertCell().textContent = project.unmanagedHours.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            row.insertCell().textContent = project.lastUpdate;
+
+            totalUnmanagedHours += hours;
+            totalProjects++;
+        });
+
+        // Adds the table to its accordion wrapper
+        accordionContentWrapper.appendChild(projectTable);
+
+        // Adds accordion functionality
+        managerHeader.addEventListener('click', () => {
+            const isExpanded = managerHeader.classList.toggle('expanded');
+            accordionContentWrapper.classList.toggle('show'); // The wrapper handles showing/hiding
+            // Changes arrow direction
+            managerHeader.querySelector('.arrow').style.transform = isExpanded ? 'rotate(90deg)' : 'rotate(0deg)';
+        });
+    }
+
+    // Adds the global total row at the end of the container
+    const totalTable = document.createElement('table');
+    totalTable.className = 'w-full mt-8 rounded-lg overflow-hidden shadow-sm';
+    totalTable.innerHTML = `
+        <tfoot>
+            <tr>
+                <td class="px-6 py-4 text-left">Nombre total de projets : <strong>${totalProjects}</strong></td>
+                <td class="px-6 py-4 text-right" colspan="3">Nombre d'heures : <strong>${totalUnmanagedHours.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong></td>
+            </tr>
+        </tfoot>
+    `;
+    appContainer.appendChild(totalTable);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projets sans réunions</title>
+    <!-- Chargement de Tailwind CSS pour un style moderne et réactif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Styles globaux pour le corps de la page */
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f3f4f6; /* Gris très clair */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Aligne en haut pour ne pas centrer verticalement trop bas */
+            min-height: 100vh;
+            padding: 2rem; /* Espacement autour du contenu */
+            box-sizing: border-box; /* Inclut le padding dans la largeur/hauteur totale */
+        }
+        /* Conteneur principal des cartes manager */
+        .container {
+            background-color: #ffffff; /* Blanc pour le conteneur principal */
+            padding: 2.5rem;
+            border-radius: 1rem; /* Bords arrondis */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Ombre douce */
+            max-width: 800px; /* Largeur maximale pour une meilleure lisibilité */
+            width: 100%;
+            margin-top: 2rem; /* Marge supérieure pour éloigner du haut de la page */
+        }
+        /* Style pour chaque carte de manager */
+        .manager-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem; /* Espacement entre les blocs de managers */
+            overflow: hidden; /* Assure que les bords arrondis sont respectés */
+        }
+        .manager-card:last-child {
+            margin-bottom: 0; /* Pas de marge après le dernier bloc */
+        }
+        /* Sommaire du manager (ligne principale visible) */
+        .manager-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            font-size: 1.125rem; /* Texte légèrement plus grand */
+            font-weight: 600; /* Semi-gras */
+            color: #374151; /* Gris foncé */
+            background-color: #f9fafb; /* Légèrement grisé */
+            border-bottom: 1px solid #e5e7eb; /* Séparateur avec les détails */
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border-radius: 0.75rem 0.75rem 0 0; /* Bords arrondis seulement en haut */
+        }
+        .manager-summary:hover {
+            background-color: #e0e7ff; /* Couleur au survol */
+        }
+        .manager-summary.expanded {
+            background-color: #e0e7ff; /* Couleur quand ouvert */
+        }
+
+        /* Alignement à droite pour les nombres et la barre de progression */
+        .manager-summary .right-aligned {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Espacement entre les éléments à droite */
+            font-size: 1rem; /* Texte plus petit pour les valeurs */
+            font-weight: 500;
+            color: #4b5563; /* Gris moyen */
+        }
+
+        /* Styles pour la barre de progression */
+        .progress-bar-container {
+            width: 100px; /* Largeur fixe pour le conteneur de la barre */
+            height: 10px;
+            background-color: #e5e7eb; /* Fond gris clair de la barre */
+            border-radius: 5px;
+            overflow: hidden; /* Assure que la barre remplie est arrondie */
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; /* Animation de la barre et de la couleur */
+        }
+
+        /* Contenu des détails du projet (caché/affiché par JS) */
+        .project-details-content {
+            border-top: none; /* Pas de double bordure avec le sommaire */
+            background-color: #f0f4f8; /* Arrière-plan légèrement différent pour les détails */
+            border-radius: 0 0 0.75rem 0.75rem; /* Bords arrondis seulement en bas */
+        }
+        /* La liste des projets est directement contenue dans .project-details-content */
+        .project-details-content ul {
+            list-style: none; /* Pas de puces */
+            padding: 0; /* Pas de padding ici, les items auront leur propre padding */
+            margin: 0;
+        }
+        .project-details-content li {
+            padding: 0.75rem 1.5rem; /* Padding pour chaque élément de la liste */
+            color: #374151; /* Texte gris foncé */
+            border-bottom: 1px dashed #d1d5db; /* Ligne pointillée entre les projets */
+        }
+        .project-details-content li:last-child {
+            border-bottom: none; /* Pas de bordure pour le dernier élément */
+            padding-bottom: 1.5rem; /* Padding en bas pour le dernier élément */
+        }
+
+        /* Style de l'icône de flèche de l'accordéon */
+        .accordion-arrow {
+            display: inline-block;
+            margin-right: 0.5rem;
+            transition: transform 0.2s ease-in-out;
+        }
+        /* Rotation de la flèche lorsque l'accordéon est ouvert */
+        .manager-summary.expanded .accordion-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* Classes de couleurs pour les dates et fonds */
+        .date-red {
+            color: #dc2626; /* Rouge vif */
+            font-weight: 600;
+        }
+        .date-yellow {
+            color: #d97706; /* Jaune orangé */
+            font-weight: 600;
+        }
+        .date-green {
+            color: #16a34a; /* Vert vif */
+            font-weight: 600;
+        }
+
+        .bg-red-100 { background-color: #fee2e2; }
+        .bg-yellow-100 { background-color: #fffbeb; }
+        .bg-green-100 { background-color: #d1fae5; }
+
+        /* Styles pour la légende */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .color-box {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.25rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">Projets sans réunions</h1>
+        <div class="legend mb-6">
+            <div class="legend-item">
+                <span class="color-box bg-green-100 border border-green-400"></span>
+                <span class="date-green">Début exec. &le; 30 jours</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box bg-yellow-100 border border-yellow-400"></span>
+                <span class="date-yellow">Début exec. > 30 et &le; 90 jours</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box bg-red-100 border border-red-400"></span>
+                <span class="date-red">Début exec. > 90 jours</span>
+            </div>
+        </div>
+        <div id="managerBlocksContainer">
+            <!-- Les blocs de managers seront insérés ici par JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Données brutes des projets et chantiers avec une colonne de date
+        const rawProjectsData = `
+Manager	Chantier	Responsable exec	Responsable étude	Début exec
+BAC MATHIEU	820 - GRAPHIK ; Ensemble de 161 logements collectifs	ORSONNEAU DENIS	SALAUN NICOLAS	17-12-2020
+FOUCHER THIBAULT	001 - Charly GUITTON 2025	GUITTON CHARLY	 	25-10-2024
+FOUCHER THIBAULT	004 - restructuration piscine du TIR - PARIS	PRUD HOMME CEDRIC	POYAC THOMAS	06-01-2024
+FOUCHER THIBAULT	004 - Romain DUMONT 2025	DUMONT Romain	 	25-10-2024
+FOUCHER THIBAULT	005 - réhabilitation piscine Alexandre Braud - ST MARS LA JAILLE	COLAS MICKAEL	LEGROS JEAN MARIE	16-01-2025
+FOUCHER THIBAULT	006 - mise en service VILLA 37	DUMONT Romain	 	18-11-2024
+FOUCHER THIBAULT	007 - chiffrage	POYAC THOMAS	 	23-01-2025
+FOUCHER THIBAULT	009 - Conception, construction centre aqualudique - CABOURG	POTIN KEVIN	LEGROS JEAN MARIE	20-07-2021
+FOUCHER THIBAULT	010 - réhabilitation et extension piscine - LA CRECHE	FOUCHER THIBAULT	LEGROS JEAN MARIE	11-03-2025
+FOUCHER THIBAULT	011 - EFS CENTRE PAYS DE LA LOIRE	FOUCHER THIBAULT	SALAUN NICOLAS	11-03-2025
+FOUCHER THIBAULT	012 - chiffrage 2025	FOUCHER THIBAULT	 	31-01-2025
+FOUCHER THIBAULT	012 - rénovation chaufferie Résidence 38 rue de Bretagne - PARIS	BUCHOU CLEMENT	SALAUN NICOLAS	18-03-2025
+FOUCHER THIBAULT	020 - Construction d'un centre aquatique - GUICHEN	BUCHOU CLEMENT	LEGROS JEAN MARIE	15-02-2022
+FOUCHER THIBAULT	023 - Travaux de pérennisation de la piscine Petite Amazonie - NANTES	GRELLIER NICOLAS	POYAC THOMAS	10-06-2022
+FOUCHER THIBAULT	026 - Extension & rénovation Hôtel IBIS - TREILLIERES	GRELLIER NICOLAS	SALAUN NICOLAS	01-08-2022
+FOUCHER THIBAULT	027 - travaux de réhabilitation piscine Neptune - DONGES	GRELLIER NICOLAS	SALAUN NICOLAS	02-08-2022
+FOUCHER THIBAULT	031 - COURTOISVILLE - Rénovation et extension du grand hôtel - ST MALO	GUYOMARD ALEXANDRE	POYAC THOMAS	11-01-2023
+FOUCHER THIBAULT	035 - petits travaux Nicolas GRELLIER	COMTE FABIEN	RIGAUDEAU MICKAEL	21-02-2023
+FOUCHER THIBAULT	036 - construction d'un centre aquatique - PACE	GUYOMARD ALEXANDRE	LEGROS JEAN MARIE	19-04-2023
+FOUCHER THIBAULT	038 - AQUABAIE - réhabilitation de la halle sportive - SAINT-BRIEUC	GUYOMARD ALEXANDRE	LEGROS JEAN MARIE	27-06-2023
+FOUCHER THIBAULT	039 - LES ROCHES ROUGES - piscine de l hôtel - LA BAULE	FOUCHER THIBAULT	LEGROS JEAN MARIE	19-09-2023
+FOUCHER THIBAULT	041 - piscine BELLIARD - PARIS	PRUD HOMME CEDRIC	LEGROS JEAN MARIE	28-09-2023
+FOUCHER THIBAULT	042 - piscine MONTMORENCY	POTIN KEVIN	LEGROS JEAN MARIE	28-09-2023
+FOUCHER THIBAULT	044 - MAISON SAINT CHARLES - MISSILLAC	GICQUEAU CYRIL	SALAUN NICOLAS	30-10-2023
+FOUCHER THIBAULT	047 - VALDYS	GUILLET JEROME	DUMONT ROMAIN	20-12-2023
+FOUCHER THIBAULT	048 - hotel MERCURE - QUIBERON	GRELLIER NICOLAS	GICQUEAU CYRIL	08-01-2024
+FOUCHER THIBAULT	050 - modification de la production d énergies - MACHECOUL	GRELLIER NICOLAS	SALAUN NICOLAS	24-01-2024
+FOUCHER THIBAULT	052 - AQUATONIC - SAINT GREGOIRE	GUYOMARD ALEXANDRE	LEGROS JEAN MARIE	22-03-2024
+FOUCHER THIBAULT	054 - AQUALAGON - 77	BUCHOU CLEMENT	LEGROS JEAN MARIE	29-03-2024
+FOUCHER THIBAULT	055 - CENTER PARCS - VILLAGE NATURE PARIS (LIFTER)	BUCHOU CLEMENT	LEGROS JEAN MARIE	28-03-2024
+FOUCHER THIBAULT	058 - rénovation de la piscine Château-Landon - PARIS	BUCHOU CLEMENT	LEGROS JEAN MARIE	15-05-2024
+FOUCHER THIBAULT	059 - AQUALIS - travaux d'amélioration énergétique - GOUVIEUX	PRUD HOMME CEDRIC	POYAC THOMAS	21-06-2024
+FOUCHER THIBAULT	061 - SALLE DES NOUELLES - rénovation énergétique - LE LANDREAU	GUILLEMOT DIMITRY	SALAUN NICOLAS	23-07-2024
+FOUCHER THIBAULT	062 - Rénovation de la pataugeoire - parc des Hautes Ourmes - RENNES	GUYOMARD ALEXANDRE	GRELLIER NICOLAS	03-09-2024
+HAMIDANE ZAKARIA	001 - petits travaux 2025 / 9815	HAMIDANE ZAKARIA	HAMIDANE ZAKARIA	25-11-2024
+HAMIDANE ZAKARIA	004 - RCU - Raccordement au réseau de chaleur urbain - NANTES	TEDESCHI STEPHANE	SALAUN NICOLAS	15-01-2025
+HAMIDANE ZAKARIA	012 - Villa d'Indre et Loire	BAC MATHIEU	 	29-12-2021
+HAMIDANE ZAKARIA	015 - EHPAD LA HOUSSAIS - REZE	HAMIDANE ZAKARIA	MOREAU JEREMY	21-03-2022
+HAMIDANE ZAKARIA	022 - ILOT ADAM - Plateau de bureaux - NANTES	HAMIDANE ZAKARIA	SALAUN NICOLAS	19-05-2022
+HAMIDANE ZAKARIA	023 - Fluide Villa 37	BUCHOU CLEMENT	HAMIDANE ZAKARIA	07-06-2022
+HAMIDANE ZAKARIA	030 - Caisse d'épargne - aménagement plateau de bureau - CESSON SEVIGNE	GUYOMARD ALEXANDRE	SALAUN NICOLAS	14-12-2022
+HAMIDANE ZAKARIA	043 - LES ROCHES ROUGES - hôtel - LA BAULE	CORCKET NICOLAS	GOIBEAU Josselin	19-09-2023
+HAMIDANE ZAKARIA	047 - résidence MOULIN DU BOIS - SAINT-HERBLAIN	ROCHARD NICOLAS	SALAUN NICOLAS	07-12-2023
+HAMIDANE ZAKARIA	052 - LES REFLETS DE LOIRE - travaux d amenagement - NANTES	HAMIDANE ZAKARIA	SALAUN NICOLAS	28-11-2023
+HAMIDANE ZAKARIA	053 - CEBPL - ORVAULT	ROCHARD NICOLAS	SALAUN NICOLAS	19-12-2023
+HAMIDANE ZAKARIA	064 - EPF - Construction campus universitaire - SAINT NAZAIRE	CORCKET NICOLAS	HAECK RAPHAELLE	26-06-2024
+HAMIDANE ZAKARIA	065 - POULIGOU - Travaux d'amélioration énergétique - PORNICHET	HAMIDANE ZAKARIA	MOREAU JEREMY	27-06-2024
+HAMIDANE ZAKARIA	066 - ECOLE ERLON - réaménagement de 3 niveaux de bureaux - NANTES	ROCHARD NICOLAS	LETOCQUART NATHAN	01-07-2024
+HAMIDANE ZAKARIA	067 - AUTOGREEN - Construction de 65 logements et locaux tertiaires - STHERBLAIN	DROUILLAT DAVID	GOIBEAU Josselin	18-07-2024
+HAMIDANE ZAKARIA	070 - CHU - restructuration du service accueil des urgences - CHOLET	ROCHARD NICOLAS	LAMBILLARD MATTHIEU	24-06-2024
+LE GARREC CHRISTOPHE FABKIT	072 - FABKIT MATERAS (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	27-09-2023
+LE GARREC CHRISTOPHE FABKIT	079 - FABKIT MOIRANS LA GARE (HT LYON)	SALIER JOHANN	CHAMBRON OLIVIER	04-10-2023
+LE GARREC CHRISTOPHE FABKIT	087 - FABKIT COUR MONSELET (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	22-11-2023
+LE GARREC CHRISTOPHE FABKIT	088 - FABKIT CHU MONACO	SALIER JOHANN	CHAMBRON OLIVIER	22-11-2023
+LE GARREC CHRISTOPHE FABKIT	089 - FABKIT CHU NANTES	SALIER JOHANN	LE GARREC CHRISTOPHE	22-11-2023
+LE GARREC CHRISTOPHE FABKIT	099 - FABKIT LAOME T2 (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	07-03-2024
+LE GARREC CHRISTOPHE FABKIT	100 - FABKIT FUJI ABCDEFGHIJK (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	07-03-2024
+LE GARREC CHRISTOPHE FABKIT	108 - FABKIT LES BOIS D ANGERS (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	10-04-2024
+LE GARREC CHRISTOPHE FABKIT	121 - FABKIT DEVELOPPEMENT KIT	SALIER JOHANN	STEFKO FERENC	16-05-2024
+LE GARREC CHRISTOPHE FABKIT	134 - FABKIT TERRA STILA (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	15-07-2024
+LE GARREC CHRISTOPHE FABKIT	140 - FABKIT CHRYSALIDE (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	09-10-2024
+LE GARREC CHRISTOPHE FABKIT	141 - FABKIT AMARYLLIS (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	09-10-2024
+LE GARREC CHRISTOPHE FABKIT	142 - FABKIT BIPLAN (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	09-10-2024
+LE GARREC CHRISTOPHE FABKIT	147 - FABKIT ARCHIPEL (HT LYON)	SALIER JOHANN	CHAMBRON OLIVIER	14-11-2024
+LE GARREC CHRISTOPHE FABKIT	148 - FABKIT MY CAMPUS (HT NANTES)	SALIER JOHANN	CHAMBRON OLIVIER	28-11-2024
+NAVET MATTHIEU	001 - ARCHIPEL - construction de 37 logements sociaux - ST NAZAIRE	CORCKET NICOLAS	SALAUN NICOLAS	09-02-2021
+NAVET MATTHIEU	004 - SAV 9813	NAVET MATTHIEU	COUTADEUR TITOUAN	14-01-2024
+NAVET MATTHIEU	006 - SAV	FOUQUET GLENN	 	02-08-2021
+NAVET MATTHIEU	008 - FUSION - ILOT F - Activités - Bureaux - Hôtel - Logements - NANTES	BABAD LOUAN	GOIBEAU Josselin	28-10-2021
+NAVET MATTHIEU	011 - ARBOREA - construction de 57 logements - ANGERS	CARTIER CHARLES	GOIBEAU Josselin	29-09-2022
+NAVET MATTHIEU	012 - STREAM - construction de 24 logements - NANTES	ANNE ALEXANDRE	GOIBEAU Josselin	01-12-2022
+NAVET MATTHIEU	013 - CARAT - construction de 21 logements - NANTES	ANNE ALEXANDRE	GOIBEAU Josselin	05-12-2022
+NAVET MATTHIEU	014 - LAØME PC1 T2 - construction de 62 logements - NANTES	ORSONNEAU DENIS	LETOCQUART NATHAN	08-12-2022
+NAVET MATTHIEU	025 - FUJI - bâtiments A-B-C-D-E-F-G-H - NANTES	CALLARD ANTHONY	LAMBILLARD MATTHIEU	15-05-2023
+NAVET MATTHIEU	026 - FUJI - bâtiment K - NANTES	CALLARD ANTHONY	LAMBILLARD MATTHIEU	23-08-2023
+NAVET MATTHIEU	033 - LES BOIS D ANGERS - immeuble de 75 logements et crèche - ELEC	DUBOIS JULIEN	RIGAUDEAU MICKAEL	27-10-2023
+NAVET MATTHIEU	035 - PITRE CHEVALIER - construction de 37 logements collectifs - PAIMBOEUF	ROGER ANTONY	SALAUN NICOLAS	20-11-2023
+NAVET MATTHIEU	037 - petits travaux 2024	MARIMAO JEAN-SEBASTIEN	COUTADEUR TITOUAN	01-01-2024
+NAVET MATTHIEU	038 - AMARYLLIS - NANTES	ORSONNEAU DENIS	LABAT PAUL-ANDRE	25-01-2024
+NAVET MATTHIEU	046 - EHPAD LA CERISAIE - ACHT210404-réhabilitation réseaux EC sanitaire- NANTES	BERGOT NOEL	COUTADEUR TITOUAN	21-05-2024
+NAVET MATTHIEU	051 - EPHAD OCEANE - Remise en conformité de l'installation ES - NANTES	ROGER ANTONY	SALAUN NICOLAS	15-07-2024
+NAVET MATTHIEU	055 - SEMARD - construction et rénovation de 23 logements - REZE - ELEC	MARIMAO JEAN-SEBASTIEN	RIGAUDEAU MICKAEL	12-08-2024
+NAVET MATTHIEU	057 - ECLOZ - construction de 28 logements collectifs - bât D - NANTES	LEGRAND MATHIEU	MOREAU JEREMY	27-09-2024
+NAVET MATTHIEU	058 - petits travaux électricité 2024	DUBOIS JULIEN	RIGAUDEAU MICKAEL	30-09-2024
+RICHARDEAU CHRISTOPHE	2814000392 - 35 Logements VANVES L'ECRIN / Bouygues Immo	GOMES JOSE-PIERRE	MECHIN SEBASTIEN	09-01-2023
+RICHARDEAU CHRISTOPHE	2814000393 - Rénovation Parking P2 ORLY / Bouygues	MECHIN SEBASTIEN	MECHIN SEBASTIEN	09-01-2023
+RICHARDEAU CHRISTOPHE	2814000394 - Hôpital Fondation Rothschild  phase 0 / SPIE	VIRLOUVET JULIEN	MECHIN SEBASTIEN	01-02-2023
+RICHARDEAU CHRISTOPHE	2814000396 - Piscine de Pompey	VIRLOUVET JULIEN	MECHIN SEBASTIEN	30-03-2023
+RICHARDEAU CHRISTOPHE	2814000401 - P18 Piscine Belliard / Bouygues	GOMES JOSE-PIERRE	MECHIN SEBASTIEN	02-11-2023
+RICHARDEAU CHRISTOPHE	2814000403 - Château de Gaillon / Agglo SEINE EURE	GOMES JOSE-PIERRE	MAROTTE GEOFFREY	08-01-2024
+RICHARDEAU CHRISTOPHE	9816000001 - Salles blanches Hôpital ROTHSCHILD / SPIE BATIGNOLLES	VIRLOUVET JULIEN	MECHIN SEBASTIEN	02-06-2025
+RICHARDEAU CHRISTOPHE	9816000002 - Puits Y, RSM, NLF Ligne 15 / Fayat	VIRLOUVET JULIEN	MECHIN SEBASTIEN	07-02-2025
+RICHARDEAU CHRISTOPHE	9816000004 - Travaux CVCD Phase 1 / Fondation Rothschild	VIRLOUVET JULIEN	JEAN ROMAIN	03-02-2025
+        `.trim();
+
+        // Données sur le nombre total de dossiers par manager
+        const rawTotalDossiersData = `
+FOUCHER THIBAULT 51
+NAVET MATTHIEU 42
+HAMIDANE ZAKARIA 31
+LE GARREC CHRISTOPHE FABKIT 27
+RICHARDEAU CHRISTOPHE 12
+BAC MATHIEU 1
+        `.trim();
+
+        /**
+         * Parcourt les données brutes des projets et les agrège par manager,
+         * en extrayant la date de début d'exécution pour chaque projet ainsi que les responsables.
+         * @param {string} data - Les données brutes des projets.
+         * @returns {Object.<string, {count: number, projects: {chantier: string, date: Date, respExec: string, respEtude: string}[], earliestExecDate: Date|null}>} Données des projets par manager.
+         */
+        function parseProjectsData(data) {
+            const lines = data.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const managerProjects = {};
+
+            // Ignorer la ligne d'en-tête (la première ligne)
+            for (let i = 1; i < lines.length; i++) {
+                const parts = lines[i].split('\t');
+                // S'assurer qu'il y a suffisamment de colonnes, y compris la date de début d'exécution, responsable exec et responsable étude
+                if (parts.length >= 5) {
+                    const managerName = parts[0].trim();
+                    const chantierName = parts[1].trim();
+                    const responsableExec = parts[2] ? parts[2].trim() : 'N/A';
+                    const responsableEtude = parts[3] ? parts[3].trim() : 'N/A';
+                    const dateString = parts[4].trim(); // La 5ème colonne est la date "Début exec"
+
+                    if (managerName && chantierName && dateString) {
+                        // Parser la date au format JJ-MM-AAAA
+                        const dateParts = dateString.split('-');
+                        // new Date(année, mois-1, jour)
+                        const projectDate = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
+
+                        // Vérifier si la date est valide
+                        if (!isNaN(projectDate.getTime())) {
+                            if (!managerProjects[managerName]) {
+                                managerProjects[managerName] = { count: 0, projects: [], earliestExecDate: null };
+                            }
+                            managerProjects[managerName].count++;
+                            managerProjects[managerName].projects.push({
+                                chantier: chantierName,
+                                date: projectDate,
+                                respExec: responsableExec,
+                                respEtude: responsableEtude
+                            });
+
+                            // Mettre à jour la date de début d'exécution la plus ancienne pour le manager
+                            if (!managerProjects[managerName].earliestExecDate || projectDate < managerProjects[managerName].earliestExecDate) {
+                                managerProjects[managerName].earliestExecDate = projectDate;
+                            }
+                        } else {
+                            console.warn(`Date de début d'exécution non valide pour le projet : ${chantierName} (${dateString})`);
+                        }
+                    }
+                }
+            }
+            return managerProjects;
+        }
+
+        /**
+         * Parcourt les données brutes des totaux de dossiers.
+         * @param {string} data - Les données brutes des totaux de dossiers.
+         * @returns {Object.<string, number>} Total de dossiers par manager.
+         */
+        function parseTotalDossiersData(data) {
+            const lines = data.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const totalDossiers = {};
+
+            lines.forEach(line => {
+                const parts = line.split(' ');
+                if (parts.length >= 2) {
+                    const count = parseInt(parts.pop(), 10);
+                    const managerName = parts.join(' ').trim();
+                    if (!isNaN(count) && managerName) {
+                        totalDossiers[managerName] = count;
+                    }
+                }
+            });
+            return totalDossiers;
+        }
+
+        /**
+         * Combine les données des projets et des totaux de dossiers.
+         * @param {Object} projectsData - Données des projets par manager.
+         * @param {Object} totalDossiersData - Total des dossiers par manager.
+         * @returns {Array<Object>} Un tableau d'objets, chaque objet représentant un manager
+         * avec ses projets sans réunion, la date de début d'exécution la plus ancienne, et le total de dossiers.
+         */
+        function combineAndSortData(projectsData, totalDossiersData) {
+            const combinedData = [];
+            for (const managerName in projectsData) {
+                combinedData.push({
+                    manager: managerName,
+                    projectsNoMeetingsCount: projectsData[managerName].count,
+                    projects: projectsData[managerName].projects, // Inclure les détails des projets
+                    earliestExecDate: projectsData[managerName].earliestExecDate,
+                    totalDossiers: totalDossiersData[managerName] || 0 // 0 si non trouvé
+                });
+            }
+
+            // Tri par nombre de projets sans réunion (décroissant)
+            return combinedData.sort((a, b) => b.projectsNoMeetingsCount - a.projectsNoMeetingsCount);
+        }
+
+        /**
+         * Formate une date au format JJ-MM-AAAA.
+         * @param {Date} date - L'objet Date à formater.
+         * @returns {string} La date formatée.
+         */
+        function formatDate(date) {
+            if (!date) return '';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        /**
+         * Détermine la classe de couleur du texte en fonction de l'ancienneté de la date.
+         * @param {Date} date - La date à évaluer.
+         * @returns {string} La classe CSS Tailwind pour la couleur du texte.
+         */
+        function getDateColorClass(date) {
+            if (!date) return '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour une comparaison précise
+            const diffTime = Math.abs(today.getTime() - date.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 365) {
+                return 'date-red'; // Plus de 365 jours (1 an) : Rouge
+            } else if (diffDays > 90) {
+                return 'date-yellow'; // Plus de 90 jours : Jaune
+            } else if (diffDays <= 30) {
+                return 'date-green'; // Moins de 30 jours : Vert
+            }
+            return 'text-gray-800'; // Par défaut (entre 30 et 90 jours)
+        }
+
+        /**
+         * Détermine la classe de couleur de fond en fonction de l'ancienneté de la date.
+         * @param {Date} date - La date à évaluer.
+         * @returns {string} La classe CSS Tailwind pour la couleur de fond.
+         */
+        function getDateBackgroundColorClass(date) {
+            if (!date) return '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour une comparaison précise
+            const diffTime = Math.abs(today.getTime() - date.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // J'ai ajusté la logique pour qu'elle corresponde aux légendes :
+            // Vert: <= 30 jours
+            // Jaune: > 30 jours ET <= 90 jours
+            // Rouge: > 90 jours
+            if (diffDays <= 30) {
+                return 'bg-green-100'; // Moins de 30 jours : Fond vert clair
+            } else if (diffDays > 30 && diffDays <= 90) { // Si > 30 et <= 90 jours
+                return 'bg-yellow-100'; // Jaune
+            } else if (diffDays > 90) { // Si > 90 jours
+                return 'bg-red-100'; // Rouge
+            }
+            return ''; // Par défaut, pas de couleur de fond
+        }
+
+
+        /**
+         * Affiche les résultats en blocs de managers avec la fonctionnalité d'accordéon et le diagramme à barres.
+         * @param {Array<Object>} data - Les données combinées et triées à afficher.
+         */
+        function displayResults(data) {
+            const container = document.getElementById('managerBlocksContainer');
+            container.innerHTML = ''; // Nettoyer les anciennes données
+
+            data.forEach((managerEntry) => {
+                const managerCard = document.createElement('div');
+                managerCard.classList.add('manager-card');
+
+                // Créer le sommaire du manager
+                const managerSummary = document.createElement('div');
+                managerSummary.classList.add('manager-summary');
+
+                const managerNameWithArrow = document.createElement('span');
+                managerNameWithArrow.innerHTML = `
+                    <svg class="accordion-arrow inline-block w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                    ${managerEntry.manager}
+                `;
+                managerSummary.appendChild(managerNameWithArrow);
+
+                const managerStatsRight = document.createElement('div');
+                managerStatsRight.classList.add('right-aligned');
+
+                // Ajouter le texte du ratio
+                const ratioText = document.createElement('span');
+                ratioText.textContent = `${managerEntry.projectsNoMeetingsCount} / ${managerEntry.totalDossiers}`;
+                managerStatsRight.appendChild(ratioText);
+
+                // Ajouter le diagramme à barres
+                const progressBarContainer = document.createElement('div');
+                progressBarContainer.classList.add('progress-bar-container');
+
+                const progressBar = document.createElement('div');
+                progressBar.classList.add('progress-bar');
+
+                // Calculer le pourcentage et définir la largeur de la barre
+                let percentage = 0;
+                if (managerEntry.totalDossiers > 0) {
+                    percentage = (managerEntry.projectsNoMeetingsCount / managerEntry.totalDossiers) * 100;
+                }
+                progressBar.style.width = `${percentage}%`;
+
+                // Définir la couleur de la barre de progression en fonction du pourcentage
+                if (percentage < 33.33) {
+                    progressBar.style.backgroundColor = '#16a34a'; // Vert
+                } else if (percentage < 66.66) {
+                    progressBar.style.backgroundColor = '#d97706'; // Jaune
+                } else {
+                    progressBar.style.backgroundColor = '#dc2626'; // Rouge
+                }
+
+                progressBarContainer.appendChild(progressBar);
+                managerStatsRight.appendChild(progressBarContainer);
+
+                managerSummary.appendChild(managerStatsRight);
+                managerCard.appendChild(managerSummary);
+
+                // Créer le conteneur pour les détails des projets (sera caché/affiché)
+                const projectDetailsContent = document.createElement('div');
+                projectDetailsContent.classList.add('project-details-content', 'hidden'); // Initialement caché
+
+                const projectList = document.createElement('ul');
+                if (managerEntry.projects.length > 0) {
+                    // Trier les projets par date de début d'exécution (du plus récent au plus ancien) pour l'affichage des détails
+                    const sortedProjects = [...managerEntry.projects].sort((a, b) => b.date.getTime() - a.date.getTime());
+                    sortedProjects.forEach(project => {
+                        const listItem = document.createElement('li');
+                        const projectBackgroundColorClass = getDateBackgroundColorClass(project.date);
+                        // Appliquer la classe de couleur de fond si elle n'est pas vide
+                        if (projectBackgroundColorClass) {
+                            listItem.classList.add(projectBackgroundColorClass);
+                        }
+
+                        // Afficher le chantier, les responsables et la date avec couleur de texte
+                        listItem.innerHTML = `
+                            ${project.chantier} <br>
+                            Resp. Exec.: ${project.respExec} <br>
+                            Resp. Étude: ${project.respEtude} (<span class="${getDateColorClass(project.date)}">${formatDate(project.date)}</span>)
+                        `;
+                        projectList.appendChild(listItem);
+                    });
+                } else {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = "Aucun chantier détaillé.";
+                    projectList.appendChild(listItem);
+                }
+                projectDetailsContent.appendChild(projectList);
+                managerCard.appendChild(projectDetailsContent);
+
+                container.appendChild(managerCard);
+
+                // Gérer le clic sur la ligne du manager pour basculer les détails
+                managerSummary.addEventListener('click', () => {
+                    projectDetailsContent.classList.toggle('hidden');
+                    managerSummary.classList.toggle('expanded'); // Pour faire pivoter la flèche
+                });
+            });
+        }
+
+        // Exécuter le parsing et l'affichage quand le DOM est chargé
+        document.addEventListener('DOMContentLoaded', () => {
+            const projectsData = parseProjectsData(rawProjectsData);
+            const totalDossiersData = parseTotalDossiersData(rawTotalDossiersData);
+            const combinedAndSortedData = combineAndSortData(projectsData, totalDossiersData);
+            displayResults(combinedAndSortedData);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évolution des Indicateurs</title>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chargement de Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome pour les icônes d'accordéon (flèche) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Configuration de la police Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Style pour les en-têtes des tableaux */
+        th {
+            @apply px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+        }
+        /* Style pour les cellules des tableaux */
+        td {
+            @apply px-4 py-2 whitespace-nowrap text-sm text-gray-900;
+        }
+        /* Style pour les lignes impaires des tableaux */
+        tbody tr:nth-child(odd) {
+            @apply bg-gray-50;
+        }
+        /* Conteneur pour le graphique pour gérer la responsivité */
+        .chart-container {
+            position: relative;
+            height: 250px; /* Hauteur par défaut pour les graphiques */
+            width: 100%;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px; /* Augmenter la hauteur sur les écrans plus grands */
+            }
+        }
+        /* Style pour l'icône de l'accordéon */
+        .accordion-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .accordion-icon.rotated {
+            transform: rotate(180deg);
+        }
+        /* Styles du contenu de l'accordéon principal avec max-height pour une transition fluide */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            opacity: 0;
+        }
+        .accordion-content.expanded {
+            max-height: 1000px; /* Une valeur suffisamment grande pour contenir le tableau et le graphique */
+            opacity: 1;
+        }
+
+        /* Styles pour l'effet "flex masonry" avec CSS columns */
+        #tables-container {
+            columns: 1; /* Par défaut pour mobile */
+            column-gap: 1.5rem; /* Équivalent à gap-6 de Tailwind */
+        }
+
+        @media (min-width: 768px) { /* md breakpoint */
+            #tables-container {
+                columns: 2;
+            }
+        }
+
+        @media (min-width: 1024px) { /* lg breakpoint */
+            #tables-container {
+                columns: 3;
+            }
+        }
+
+        @media (min-width: 1280px) { /* xl breakpoint */
+            #tables-container {
+                columns: 4;
+            }
+        }
+
+        /* Empêche les cartes de se couper en travers des colonnes et ajoute une marge verticale */
+        .indicator-card {
+            break-inside: avoid-column;
+            margin-bottom: 1.5rem; /* Marge entre les cartes pour la séparation verticale */
+            width: 100%; /* Assure que la carte prend la largeur de sa colonne */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            background-color: #fff; /* bg-white */
+            overflow: hidden;
+        }
+
+        /* Styles pour les sections individuelles (tableau et graphique) à l'intérieur de l'accordéon */
+        .section-hidden {
+            display: none;
+        }
+        .section-visible {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-full mx-auto bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Évolution Mensuelle des Indicateurs</h1>
+
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
+            <button id="toggle-all" class="px-4 py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 transition">Détails</button>
+
+            <button id="toggle-tables-global" class="px-4 py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 transition">Basculer Tableaux</button>
+            <button id="toggle-charts-global" class="px-4 py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 transition">Basculer Visuels</button>
+        </div>
+
+        <div id="tables-container">
+            <!-- Les tableaux, graphiques et accordéons seront générés ici par JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Données brutes fournies par l'utilisateur
+        const rawData = `01/2025	Grands Projets	146	77 %	27 %	97 %	58 %	85 %	1 %	50 %	46 %	5 %	16 %	0 %
+01/2025	Total	3812	61 %	23 %	77 %	40 %	96 %	11 %	28 %	31 %	31 %	41 %	0 %
+02/2025	Grands Projets	151	79 %	28 %	96 %	58 %	92 %	1 %	51 %	47 %	3 %	11 %	0 %
+02/2025	Total	3884	62 %	23 %	77 %	41 %	96 %	11 %	28 %	37 %	31 %	41 %	0 %
+03/2025	Grands Projets	166	81 %	28 %	95 %	55 %	89 %	1 %	51 %	52 %	1 %	10 %	27 %
+03/2025	Total	3932	63 %	23 %	77 %	41 %	96 %	11 %	28 %	40 %	30 %	38 %	34 %
+04/2025	Grands Projets	165	76 %	29 %	97 %	53 %	92 %	0 %	53 %	53 %	1 %	4 %	27 %
+04/2025	Total	3945	61 %	23 %	77 %	41 %	96 %	11 %	29 %	43 %	29 %	37 %	36 %
+05/2025	Grands Projets	166	75 %	30 %	98 %	54 %	84 %	0 %	55 %	52 %	1 %	2 %	29 %
+05/2025	Total	4015	59 %	24 %	77 %	41 %	96 %	11 %	30 %	44 %	28 %	36 %	38 %
+06/2025	Grands Projets	164	73 %	30 %	96 %	53 %	86 %	0 %	55 %	53 %	0 %	2 %	29 %
+06/2025	Total	4014	59 %	25 %	77 %	41 %	96 %	12 %	30 %	45 %	28 %	35 %	39 %`;
+
+        // En-têtes des colonnes, y compris les colonnes implicites 'Date' et 'Territoire'
+        const headers = [
+            'Date',
+            'Territoire',
+            'Projets en exec',
+            '% Projets en exec actifs',
+            '% Projets avec réunion',
+            '% Projets phasés Direct',
+            '% PI Dépassées Direct',
+            '% Carnets gérés Direct',
+            '% Lien ECMO budget activé',
+            '% Autocontrôles paramétrés',
+            '% Date fin à jour',
+            '% Projets anormalement déclarés "Projets <100h"',
+            '% Projets avec H. sur tâches génériques',
+            '% Publié extranet'
+        ];
+
+        // Convertir les données brutes en un tableau d'objets pour un traitement plus facile
+        const lines = rawData.trim().split('\n');
+        const parsedData = [];
+        for (const line of lines) {
+            const values = line.split('\t');
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = values[index];
+            });
+            parsedData.push(row);
+        }
+
+        // Identifier les indicateurs (colonnes pour lesquelles créer un tableau)
+        const indicators = headers.slice(2); // Exclure 'Date' et 'Territoire'
+
+        // Mapping des numéros de mois aux noms complets en français
+        const monthNames = {
+            '01': 'Janvier', '02': 'Février', '03': 'Mars', '04': 'Avril',
+            '05': 'Mai', '06': 'Juin', '07': 'Juillet', '08': 'Août',
+            '09': 'Septembre', '10': 'Octobre', '11': 'Novembre', '12': 'Décembre'
+        };
+
+        // Liste pour stocker les instances de graphiques pour un accès global
+        const chartInstances = {};
+
+        // Préparer les données pour l'affichage en regroupant par indicateur et par mois
+        const processedData = {};
+        indicators.forEach(indicator => {
+            processedData[indicator] = [];
+            // Obtenir les mois uniques
+            const months = [...new Set(parsedData.map(d => d.Date))].sort(); // Trier les mois
+
+            months.forEach(month => {
+                const grandProjetsData = parsedData.find(d => d.Date === month && d.Territoire === 'Grands Projets');
+                const totalData = parsedData.find(d => d.Date === month && d.Territoire === 'Total');
+
+                if (grandProjetsData && totalData) {
+                    let totalValue = totalData[indicator];
+                    // Si l'indicateur est 'Projets en exec', diviser le total par 25
+                    if (indicator === 'Projets en exec') {
+                        // Assurez-vous que la valeur est un nombre avant de diviser
+                        const numericTotal = parseInt(totalValue);
+                        if (!isNaN(numericTotal)) {
+                            totalValue = Math.round(numericTotal / 25).toString(); // Arrondir et reconvertir en chaîne
+                        }
+                    }
+                    processedData[indicator].push({
+                        month: month,
+                        'Grands Projets': grandProjetsData[indicator],
+                        'Total': totalValue
+                    });
+                }
+            });
+        });
+
+        // Fonction utilitaire pour basculer la visibilité d'une section (tableau ou graphique)
+        function toggleSectionVisibility(sectionElements, isVisible) {
+            sectionElements.forEach(sectionElement => {
+                if (sectionElement) {
+                    if (isVisible) {
+                        sectionElement.classList.remove('section-hidden');
+                        sectionElement.classList.add('section-visible');
+                    } else {
+                        sectionElement.classList.remove('section-visible');
+                        sectionElement.classList.add('section-hidden');
+                    }
+                }
+            });
+        }
+
+        // Fonction pour créer et ajouter les tableaux et les graphiques à la page
+        function createTablesAndCharts() {
+            const tablesContainer = document.getElementById('tables-container');
+            tablesContainer.innerHTML = ''; // Nettoyer le conteneur avant d'ajouter de nouveaux éléments
+
+            for (const indicatorName in processedData) {
+                const monthlyData = processedData[indicatorName];
+
+                // Créer le conteneur pour chaque indicateur (carte)
+                const indicatorCard = document.createElement('div');
+                indicatorCard.className = 'indicator-card'; // Tailwind classes already applied in style block
+
+                // Stocker des références aux éléments internes pour les contrôles globaux
+                indicatorCard.dataset.indicatorName = indicatorName; // Pour retrouver la carte par nom d'indicateur
+
+                // Créer l'en-tête de la carte (le bouton de l'accordéon principal)
+                const cardTitle = document.createElement('button');
+                cardTitle.className = 'flex justify-between items-center w-full px-4 py-3 bg-blue-600 text-white font-semibold text-lg text-center rounded-t-xl focus:outline-none';
+                cardTitle.innerHTML = `
+                    <span>${indicatorName}</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                `;
+                indicatorCard.appendChild(cardTitle);
+
+                // Créer le conteneur pour le contenu de l'accordéon principal (qui contient les sous-sections)
+                const accordionContent = document.createElement('div');
+                accordionContent.className = 'accordion-content';
+                accordionContent.dataset.expanded = 'false';
+                indicatorCard.appendChild(accordionContent); // Ajouter au DOM ici
+
+                // --- Section Tableau ---
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'p-4 overflow-x-auto section-visible'; // Initialement visible
+                tableWrapper.dataset.sectionType = 'table'; // Marque la section comme un tableau
+                accordionContent.appendChild(tableWrapper);
+
+                const table = document.createElement('table');
+                table.className = 'min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden';
+                const thead = document.createElement('thead');
+                thead.className = 'bg-gray-100';
+                // Déterminer le libellé pour la colonne "Total" ou "Moyenne"
+                const totalOrMoyenneLabel = indicatorName === 'Projets en exec' ? 'Moyenne' : 'Total';
+                thead.innerHTML = `
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Mois</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grands Projets</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">${totalOrMoyenneLabel}</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                tbody.className = 'bg-white divide-y divide-gray-200';
+                monthlyData.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50';
+                    tr.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${monthNames[row.month.split('/')[0]]}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${row['Grands Projets']}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${row['Total']}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                tableWrapper.appendChild(table);
+
+                // --- Section Graphique ---
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'chart-container p-4 section-visible'; // Initialement visible
+                chartContainer.dataset.sectionType = 'chart'; // Marque la section comme un graphique
+                accordionContent.appendChild(chartContainer);
+
+                const canvasId = `chart-${indicatorName.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const canvas = document.createElement('canvas');
+                canvas.id = canvasId;
+                chartContainer.appendChild(canvas);
+
+
+                tablesContainer.appendChild(indicatorCard); // Ajouter la carte complète au conteneur principal
+
+
+                // --- Écouteur d'événements pour le bouton d'accordéon principal ---
+                cardTitle.addEventListener('click', () => {
+                    const icon = cardTitle.querySelector('.accordion-icon');
+                    const isCurrentlyExpanded = accordionContent.classList.contains('expanded');
+
+                    if (isCurrentlyExpanded) {
+                        accordionContent.classList.remove('expanded');
+                        icon.classList.remove('rotated');
+                        accordionContent.dataset.expanded = 'false';
+                    } else {
+                        accordionContent.classList.add('expanded');
+                        icon.classList.add('rotated');
+                        accordionContent.dataset.expanded = 'true';
+
+                        // Redimensionner et mettre à jour le graphique après l'expansion
+                        // uniquement si le graphique est visible (via les contrôles globaux)
+                        if (chartContainer.classList.contains('section-visible')) {
+                            // Delay slightly longer than max-height transition
+                            setTimeout(() => {
+                                // Use requestAnimationFrame for optimal rendering
+                                requestAnimationFrame(() => {
+                                    const chart = chartInstances[canvasId]; // Get chart instance
+                                    if (chart) {
+                                        chart.resize();
+                                        chart.update(); // Force chart redraw
+                                    }
+                                });
+                            }, 550);
+                        }
+                    }
+                });
+
+                // --- Initialisation du graphique ---
+                const labels = monthlyData.map(row => monthNames[row.month.split('/')[0]]);
+                const grandsProjetsValues = monthlyData.map(row => parseFloat(row['Grands Projets'].replace('%', '').replace(',', '.')));
+                const totalValues = monthlyData.map(row => parseFloat(row['Total'].replace('%', '').replace(',', '.')));
+
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                chartInstances[canvasId] = new Chart(ctx, { // Stocker l'instance du graphique
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Grands Projets',
+                                data: grandsProjetsValues,
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                tension: 0.3,
+                                fill: false,
+                                borderWidth: 2,
+                                pointRadius: 4,
+                                pointBackgroundColor: 'rgb(75, 192, 192)'
+                            },
+                            {
+                                // Utiliser le libellé correct pour la légende du graphique
+                                label: totalOrMoyenneLabel,
+                                data: totalValues,
+                                borderColor: 'rgb(255, 99, 132)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                tension: 0.3,
+                                fill: false,
+                                borderWidth: 2,
+                                pointRadius: 4,
+                                pointBackgroundColor: 'rgb(255, 99, 132)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Évolution de ${indicatorName}`,
+                                font: {
+                                    size: 18,
+                                    weight: 'bold'
+                                },
+                                padding: {
+                                    top: 10,
+                                    bottom: 10
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (indicatorName.includes('%')) {
+                                            label += context.raw + ' %';
+                                        } else {
+                                            label += context.raw;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                // beginAtZero est maintenant défini sur false pour permettre une meilleure visualisation des variations
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return indicatorName.includes('%') ? value + ' %' : value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } // Fin de la boucle for (indicateurs)
+
+            // --- Logique des boutons de contrôle globaux ---
+            const toggleAllButton = document.getElementById('toggle-all');
+            const toggleTablesGlobalButton = document.getElementById('toggle-tables-global');
+            const toggleChartsGlobalButton = document.getElementById('toggle-charts-global');
+
+            // Global state for table and chart visibility
+            let tablesVisibleGlobally = true;
+            let chartsVisibleGlobally = true;
+
+            // Apply initial visibility
+            document.querySelectorAll('[data-section-type="table"]').forEach(el => toggleSectionVisibility([el], tablesVisibleGlobally));
+            document.querySelectorAll('[data-section-type="chart"]').forEach(el => toggleSectionVisibility([el], chartsVisibleGlobally));
+
+
+            toggleAllButton.addEventListener('click', () => {
+                const allAccordionContents = document.querySelectorAll('.accordion-content');
+                let allExpanded = true;
+                allAccordionContents.forEach(content => {
+                    if (!content.classList.contains('expanded')) {
+                        allExpanded = false;
+                    }
+                });
+
+                allAccordionContents.forEach(content => {
+                    const icon = content.previousElementSibling.querySelector('.accordion-icon');
+                    if (allExpanded) { // If all are already open, close all
+                        content.classList.remove('expanded');
+                        icon.classList.remove('rotated');
+                        content.dataset.expanded = 'false';
+                    } else { // Otherwise, open all
+                        content.classList.add('expanded');
+                        icon.classList.add('rotated');
+                        content.dataset.expanded = 'true';
+
+                        // Redimensionner les graphiques après ouverture si ils sont globalement visibles
+                        const canvas = content.querySelector('canvas');
+                        if (canvas && chartsVisibleGlobally) { // Only resize if chart section is visible
+                            const canvasId = canvas.id;
+                            setTimeout(() => {
+                                requestAnimationFrame(() => {
+                                    const chart = chartInstances[canvasId];
+                                    if (chart) {
+                                        chart.resize();
+                                        chart.update();
+                                    }
+                                });
+                            }, 550);
+                        }
+                    }
+                });
+            });
+
+            toggleTablesGlobalButton.addEventListener('click', () => {
+                tablesVisibleGlobally = !tablesVisibleGlobally;
+                document.querySelectorAll('[data-section-type="table"]').forEach(wrapper => {
+                    toggleSectionVisibility([wrapper], tablesVisibleGlobally);
+                });
+                toggleTablesGlobalButton.textContent = tablesVisibleGlobally ? 'Masquer Tableaux' : 'Afficher Tableaux';
+            });
+
+            toggleChartsGlobalButton.addEventListener('click', () => {
+                chartsVisibleGlobally = !chartsVisibleGlobally;
+                document.querySelectorAll('[data-section-type="chart"]').forEach(container => {
+                    toggleSectionVisibility([container], chartsVisibleGlobally);
+                    if (chartsVisibleGlobally) { // If charts are being shown
+                        // Only resize charts if their parent accordion is expanded
+                        const accordionContent = container.closest('.accordion-content');
+                        if (accordionContent && accordionContent.classList.contains('expanded')) {
+                            const canvasId = container.querySelector('canvas').id;
+                            setTimeout(() => {
+                                requestAnimationFrame(() => {
+                                    const chart = chartInstances[canvasId];
+                                    if (chart) {
+                                        chart.resize();
+                                        chart.update();
+                                    }
+                                });
+                            }, 50); // Small delay for display:block to apply
+                        }
+                    }
+                });
+                toggleChartsGlobalButton.textContent = chartsVisibleGlobally ? 'Masquer Visuels' : 'Afficher Visuels';
+            });
+
+            // Initial text for global toggle buttons
+            toggleTablesGlobalButton.textContent = tablesVisibleGlobally ? 'Masquer Tableaux' : 'Afficher Tableaux';
+            toggleChartsGlobalButton.textContent = chartsVisibleGlobally ? 'Masquer Visuels' : 'Afficher Visuels';
+
+        } // Fin de createTablesAndCharts
+
+        // Appeler la fonction pour créer les tableaux et graphiques au chargement de la page
+        document.addEventListener('DOMContentLoaded', createTablesAndCharts);
+    </script>
+</body>
+</html>

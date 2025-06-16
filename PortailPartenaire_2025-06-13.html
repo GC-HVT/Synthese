@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail partenaire</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter as per instructions */
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            position: relative; /* Needed for pseudo-element positioning */
+        }
+        /* Background Image with Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1517478056262-d961e389e7c3?q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1920&h=1080'); /* Generic abstract image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15; /* Adjust transparency as needed (0.15 to 0.3 is usually good) */
+            z-index: -1; /* Place it behind all content */
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #1a73e8; /* More vibrant blue */
+            text-align: center;
+            margin-bottom: 10px; /* Reduced margin to bring text closer */
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .info-block {
+            background-color: #e6f2ff; /* Light blue background for the info block */
+            border-left: 5px solid #1a73e8; /* Blue border on the left */
+            padding: 15px 20px;
+            margin-bottom: 30px; /* Space after info block */
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px; /* Space between icon and text */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+        .info-icon {
+            font-size: 2em;
+            color: #1a73e8;
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+        .subtitle-text {
+            text-align: left; /* Left-align text */
+            color: #555;
+            font-size: 1em;
+            line-height: 1.5;
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .manager-header {
+            background-color: #e0e0e0; /* Light grey for header */
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 8px; /* Less space between manager blocks */
+            margin-bottom: 10px; /* Space before content */
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between; /* Aligns items to ends of flex container */
+            align-items: center;
+            font-size: 1.1em; /* Smaller font size */
+            font-weight: 600;
+            color: #0056b3;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .manager-header:hover {
+            background-color: #d0d0d0;
+        }
+        .manager-title-group {
+            display: flex;
+            align-items: center;
+        }
+        .arrow {
+            transition: transform 0.3s ease-in-out;
+            font-size: 0.8em;
+            margin-right: 10px; /* Arrow to the left of the text */
+            flex-shrink: 0; /* Prevent arrow from shrinking */
+        }
+        .arrow.rotated {
+            transform: rotate(-180deg); /* Arrow points up when content is open */
+        }
+        .manager-name-total {
+            margin-left: auto; /* Pushes itself to the right */
+        }
+        .manager-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+            background-color: #fcfcfc;
+            border-radius: 8px;
+            padding: 0 10px; /* No padding when collapsed */
+        }
+        .manager-content.expanded {
+            max-height: 2000px; /* Large enough to show all content */
+            padding: 10px; /* Add padding when expanded */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .structure-subtitle {
+            font-size: 1em; /* Subtitle for structure */
+            font-weight: 500;
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); /* Smaller blocks, adjusted minmax */
+            gap: 5px; /* Less spacing */
+            padding: 10px 0;
+            justify-items: center;
+        }
+        .project-block {
+            width: 50px; /* Even smaller block size */
+            height: 50px;
+            border-radius: 8px; /* Rounded corners for blocks */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative; /* Essential for tooltip positioning */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        .project-block:hover {
+            transform: scale(1.05);
+        }
+        .project-block.oui {
+            background-color: #28a745; /* Green for Oui */
+        }
+        .project-block.non {
+            background-color: #6c757d; /* Grey for Non */
+        }
+        /* Tooltip style */
+        #custom-tooltip {
+            visibility: hidden;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: fixed; /* Position relative to the viewport */
+            z-index: 100; /* High z-index to be on top */
+            white-space: normal; /* Allow text to wrap */
+            max-width: 250px; /* Max width for tooltip, allows wrapping */
+            font-size: 0.8em;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none; /* Allows clicks on elements below */
+            box-sizing: border-box; /* Include padding in width calculation */
+            word-wrap: break-word; /* Break long words */
+            transform: translateX(-50%); /* For horizontal centering */
+        }
+        #custom-tooltip.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .project-number {
+            font-size: 0.9em; /* Adjusted font size for number inside block */
+            color: white; /* White text for number */
+            font-weight: bold; /* Bold text for number */
+            text-align: center; /* Center text horizontally */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .info-block {
+                padding: 10px 15px;
+                gap: 10px;
+            }
+            .info-icon {
+                font-size: 1.8em;
+            }
+            .subtitle-text {
+                font-size: 0.9em;
+            }
+            .manager-header {
+                font-size: 1.1em; /* Even smaller on mobile */
+                padding: 12px 15px;
+            }
+            .project-grid {
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); /* Even smaller blocks on mobile */
+                gap: 4px;
+            }
+            .project-block {
+                width: 40px;
+                height: 40px;
+            }
+            #custom-tooltip {
+                font-size: 0.65em;
+                max-width: 120px;
+            }
+            .project-number {
+                font-size: 0.75em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Portail partenaire</h1>
+        <div class="info-block">
+            <span class="info-icon">&#128161;</span> <!-- Lightbulb icon -->
+            <p class="subtitle-text">
+                Le portail partenaire permet au client de suivre son projet : interventions, devis…<br/>
+                Insister auprès des assistantes pour renseigner le contact client et activer le lien.<br/>
+                Il faut communiquer sur cet accès auprès des clients au démarrage du chantier. C'est également un atout à mettre en avant pour les appels d'offre.<br/>
+                Je propose de faire un test interne pour les dossiers FABKIT, ce peut être à la fois un outil de suivi et une manière de se familiariser avec l'application pour engager les clients à l'utiliser également.
+            </p>
+        </div>
+        <div id="project-list"></div>
+    </div>
+
+    <div id="custom-tooltip"></div> <!-- Custom tooltip element in body -->
+
+    <script>
+        // Raw data provided by the user
+        const rawData = `Chantier	Budget	Publié extranet
+820 - GRAPHIK ; Ensemble de 161 logements collectifs	114441000820	Non
+001 - Charly GUITTON 2025	119817000001	Oui
+001 - Nicolas GRELLIER 2025	119812000001	Oui
+002 - Jerome GUILLET 2025	119817000002	Oui
+003 - réhabilitation du centre aquatique OCEABUL - ST JEAN DE MONTS	119812000003	Non
+003 - Vincent SALOMON 2025	119817000003	Oui
+004 - ARBORESCENCE - Construction d'un complexe Immobilier - ANGERS	114432000004	Non
+004 - restructuration piscine du TIR - PARIS	119812000004	Oui
+004 - Romain DUMONT 2025	119817000004	Oui
+005 - réhabilitation piscine Alexandre Braud - ST MARS LA JAILLE	119812000005	Oui
+006 - GLISSEO - remplacement des installations piscines et patinoires - CHOLET	119812000006	Non
+006 - mise en service VILLA 37	119817000006	Oui
+006 - Travaux de construction d'un centre Aquatique - HERBIGNAC	114432000006	Non
+007 - chiffrage	119812000007	Oui
+008 - operation de construction Nouvelle Maison ROCHAS - MAUGES S/LOIRE	119812000008	Oui
+009 - Conception, construction centre aqualudique - CABOURG	114432000009	Non
+010 - mise en service Gouvieux	119817000010	Oui
+010 - réhabilitation et extension piscine - LA CRECHE	119812000010	Non
+011 - EFS CENTRE PAYS DE LA LOIRE	119812000011	Non
+0011 - mise en service Belliard	119817000011	Oui
+012 - chiffrage 2025	119817000012	Oui
+012 - rénovation chaufferie Résidence 38 rue de Bretagne - PARIS	119812000012	Oui
+013 - AQUA VAL - travaux coupure technique - MONTEVRAIN (77)	119817000013	Oui
+014 - BOUYGUES - Centre Aquatique à SAINT-DENIS	114432000014	Non
+020 - Construction d'un centre aquatique - GUICHEN	114432000020	Oui
+023 - Travaux de pérennisation de la piscine Petite Amazonie - NANTES	114432000023	Non
+024 - Réhabilitation partielle de la piscine Paul Asseman - DUNKERQUE	114432000024	Non
+026 - Extension & rénovation Hôtel IBIS - TREILLIERES	114432000026	Non
+027 - travaux de réhabilitation piscine Neptune - DONGES	114432000027	Non
+031 - COURTOISVILLE - Rénovation et extension du grand hôtel - ST MALO	114432000031	Non
+032 - petits travaux Romain DUMONT	114432000032	Non
+035 - petits travaux Nicolas GRELLIER	114432000035	Non
+036 - construction d'un centre aquatique - PACE	114432000036	Non
+037 - rénovation de la zone pataugeoire - piscine STE ANNE SUR BRIVET	114432000037	Non
+038 - AQUABAIE - réhabilitation de la halle sportive - SAINT-BRIEUC	114432000038	Non
+039 - LES ROCHES ROUGES - piscine de l hôtel - LA BAULE	114432000039	Non
+041 - piscine BELLIARD - PARIS	114432000041	Non
+042 - piscine MONTMORENCY	114432000042	Non
+043 - extension et restructuration de la piscine des Dervallieres - NANTES	114432000043	Non
+044 - MAISON SAINT CHARLES - MISSILLAC	114432000044	Oui
+047 - VALDYS	114432000047	Non
+048 - hotel MERCURE - QUIBERON	114432000048	Non
+050 - modification de la production d énergies - MACHECOUL	114432000050	Non
+051 - construction d'un centre aquatique - CARQUEFOU	114432000051	Non
+052 - AQUATONIC - SAINT GREGOIRE	114432000052	Oui
+053 - extension / rénovation énergétique piscine Espace Dauphins - CHATEAUBRIANT	114432000053	Non
+054 - AQUALAGON - 77	114432000054	Non
+055 - CENTER PARCS - VILLAGE NATURE PARIS (LIFTER)	114432000055	Oui
+058 - rénovation de la piscine Château-Landon - PARIS	114432000058	Non
+059 - AQUALIS - travaux d'amélioration énergétique - GOUVIEUX	114432000059	Oui
+061 - SALLE DES NOUELLES - rénovation énergétique - LE LANDREAU	114432000061	Oui
+062 - Rénovation de la pataugeoire - parc des Hautes Ourmes - RENNES	114432000062	Oui
+001 - petits travaux 2025 / 9815	119815000001	Oui
+002 - TECHNICENTRE FILS	119815000002	Oui
+003 - CEBPL FLEX2 - Aménagement des plateaux de bureaux - ORVAULT	119815000003	Oui
+004 - RCU - Raccordement au réseau de chaleur urbain - NANTES	119815000004	Oui
+005 - GRENAPIN - Construction d'une résidence autonome, étudiante et crèche	119815000005	Oui
+012 - Villa d'Indre et Loire	114431000012	Non
+015 - EHPAD LA HOUSSAIS - REZE	114431000015	Non
+016 - LES NOBELS - résidentialisation de 193 logements - ST HERBLAIN	114431000016	Non
+019 - BE GREEN - Construction de 6 plateaux de bureaux - NANTES	114431000019	Non
+021 - PARC OT - Construction immeuble de bureaux - ST HERBLAIN	114431000021	Non
+022 - ILOT ADAM - Plateau de bureaux - NANTES	114431000022	Non
+023 - Fluide Villa 37	114431000023	Non
+030 - Caisse d'épargne - aménagement plateau de bureau - CESSON SEVIGNE	114431000030	Non
+038 - Lycée Louis-Antoine de Bougainville - NANTES	114431000038	Non
+041 - FUJI - bâtiments I-J - NANTES	114431000041	Non
+043 - LES ROCHES ROUGES - hôtel - LA BAULE	114431000043	Non
+044 - AIRBUS MID BUFFER	114431000044	Non
+045 - LA FLEURIAYE - CARQUEFOU	114431000045	Non
+047 - résidence MOULIN DU BOIS - SAINT-HERBLAIN	114431000047	Non
+052 - LES REFLETS DE LOIRE - travaux d amenagement - NANTES	114431000052	Non
+053 - CEBPL - ORVAULT	114431000053	Non
+054 - petits travaux 2024	114431000054	Non
+059 - SIEGE SILENE - Extension et réhabilitation du siège - ST-NAZAIRE	114431000059	Non
+062 - ADAGIO - rénovation des installations - NANTES	114431000062	Oui
+064 - EPF - Construction campus universitaire - SAINT NAZAIRE	114431000064	Non
+065 - POULIGOU - Travaux d'amélioration énergétique - PORNICHET	114431000065	Oui
+066 - ECOLE ERLON - réaménagement de 3 niveaux de bureaux - NANTES	114431000066	Oui
+067 - AUTOGREEN - Construction de 65 logements et locaux tertiaires - STHERBLAIN	114431000067	Oui
+070 - CHU - restructuration du service accueil des urgences - CHOLET	114431000070	Oui
+TFM MHS - 114431000020 - construction d'un ensemble hospitalo-universitaire	114431000020	Non
+TFM MHS - 114431000028 - CHPG - MONACO	114431000028	Non
+072 - FABKIT MATERAS (HT NANTES)	392651000072	Non
+076 - FABKIT ECLOZ (HT NANTES)	392651000076	Non
+077 - FABKIT ARBOREA (HT NANTES)	392651000077	Non
+079 - FABKIT MOIRANS LA GARE (HT LYON)	392651000079	Non
+087 - FABKIT COUR MONSELET (HT NANTES)	392651000087	Non
+088 - FABKIT CHU MONACO	392651000088	Non
+089 - FABKIT CHU NANTES	392651000089	Non
+092 - FABKIT ORGANIC (HT LYON)	392651000092	Non
+099 - FABKIT LAOME T2 (HT NANTES)	392651000099	Non
+100 - FABKIT FUJI ABCDEFGHIJK (HT NANTES)	392651000100	Non
+108 - FABKIT LES BOIS D ANGERS (HT NANTES)	392651000108	Non
+109 - FABKIT RIVE GAUCHE (HT LYON)	392651000109	Non
+113 - FABKIT CARRE DES OFFICIERS (HT NANTES)	392651000113	Non
+121 - FABKIT DEVELOPPEMENT KIT	392651000121	Non
+133 - FABKIT SULLY (HT LYON)	392651000133	Non
+134 - FABKIT TERRA STILA (HT NANTES)	392651000134	Non
+140 - FABKIT CHRYSALIDE (HT NANTES)	392651000140	Non
+141 - FABKIT AMARYLLIS (HT NANTES)	392651000141	Non
+142 - FABKIT BIPLAN (HT NANTES)	392651000142	Non
+147 - FABKIT ARCHIPEL (HT LYON)	392651000147	Non
+148 - FABKIT MY CAMPUS (HT NANTES)	392651000148	Non
+149 - FABKIT ANGORA (HT NANTES)	392651000149	Non
+151 - PITRE CHEVALIER (HT NANTES)	392651000151	Non
+154 - GENDARMERIE ANCENIS (HT NANTES)	392651000154	Non
+158 - ILOT V6V - (HT LYON)	392651000158	Non
+160 - PENFELD - HT NANTES	392651000160	Non
+165 - ENGO (PREFATEC)	392651000165	Non
+001 - ARCHIPEL - construction de 37 logements sociaux - ST NAZAIRE	114433000001	Non
+001 - Réhabilitation de la résidences Berthauderie-Robespierre - ST NAZAIRE	119813000001	Non
+002 - LES CONFLUENCES - construction de 67 logements - CHALONNES SUR LOIRE	119814000002	Oui
+002 - PENFELD - Restructuration d'une résidence de 171 logements - ORVAULT	119813000002	Oui
+003 - ESPLANADE 2 - construction de 113 logements - RENNES	119814000003	Oui
+004 - SAV 9813	119813000004	Oui
+006 - SAV	114433000006	Non
+008 - FUSION - ILOT F - Activités - Bureaux - Hôtel - Logements - NANTES	114433000008	Non
+011 - ARBOREA - construction de 57 logements - ANGERS	114433000011	Non
+012 - STREAM - construction de 24 logements - NANTES	114433000012	Non
+013 - CARAT - construction de 21 logements - NANTES	114433000013	Non
+014 - LAØME PC1 T2 - construction de 62 logements - NANTES	114433000014	Non
+015 - MATERA - construction de 81 logements - NANTES	114433000015	Non
+016 - construction de 14 logements - MOUTIERS EN RETZ	114433000016	Non
+017 - construction de 32 logements individuels - ST PERE-EN-RETZ	114433000017	Non
+020 - ARBOREA - construction de 57 logements - ANGERS - ELEC	114433000020	Non
+021 - Construction de 14 logements - MOUTIERS EN RETZ - ELEC	114433000021	Non
+022 - Construction de 32 logements individuels - ST PERE-EN-RETZ - ELEC	114433000022	Non
+023 - ECLOZ - construction de 83 logements collectifs et bureaux - NANTES	114433000023	Oui
+024 - COUR MONSELET - construction de 120 logements collectifs - NANTES	114433000024	Non
+025 - FUJI - bâtiments A-B-C-D-E-F-G-H - NANTES	114433000025	Non
+026 - FUJI - bâtiment K - NANTES	114433000026	Non
+027 - CARRE DES OFFICIERS - construction de 51 logements - NANTES	114433000027	Non
+030 - AGATES - construction de 23 logements - PORNICHET	114433000030	Non
+031 - Résidence SILVA TERRA STILLA - NANTES	114433000031	Oui
+032 - LES BOIS D ANGERS - immeuble de 75 logements et crèche	114433000032	Non
+033 - LES BOIS D ANGERS - immeuble de 75 logements et crèche - ELEC	114433000033	Non
+034 - CHRYSALIDE - immeuble à usage de logements et locaux d activites - AVRILLE	114433000034	Non
+035 - PITRE CHEVALIER - construction de 37 logements collectifs - PAIMBOEUF	114433000035	Non
+037 - petits travaux 2024	114433000037	Non
+038 - AMARYLLIS - NANTES	114433000038	Non
+039 - MY CAMPUS ; CHATEAUBRIAND - RENNES	114433000039	Non
+040 - ANGORA - construction de 159 logements et espace partagé ADOMA - LAVAL	114433000040	Non
+041 - BIPLAN - construction de 67 logements collectifs - ANGERS	114433000041	Non
+045 - GENDARMERIE - Réhabilitation et construction de 53 logements - ANCENIS	114433000045	Non
+046 - EHPAD LA CERISAIE - ACHT210404-réhabilitation réseaux EC sanitaire- NANTES	114433000046	Oui
+051 - EPHAD OCEANE - Remise en conformité de l'installation ES - NANTES	114433000051	Oui
+052 - BECQUEREL - Réhabilitation de 220 logements collectifs - NANTES	114433000052	Oui
+054 - SEMARD - construction et rénovation de 23 logements - REZE	114433000054	Oui
+055 - SEMARD - construction et rénovation de 23 logements - REZE - ELEC	114433000055	Oui
+057 - ECLOZ - construction de 28 logements collectifs - bât D - NANTES	114433000057	Oui
+058 - petits travaux électricité 2024	114433000058	Non
+2813000460 - FIMINCO ROMAINVILLE	112813000460	Non
+2814000392 - 35 Logements VANVES L'ECRIN / Bouygues Immo	112814000414	Non
+2814000393 - Rénovation Parking P2 ORLY / Bouygues	112814000393	Non
+2814000394 - Hôpital Fondation Rothschild  phase 0 / SPIE	112814000394	Non
+2814000395 - Lycée de Sartrouville / Bouygues	112814000395	Non
+2814000396 - Piscine de Pompey	112814000396	Non
+2814000401 - P18 Piscine Belliard / Bouygues	112814000401	Non
+2814000403 - Château de Gaillon / Agglo SEINE EURE	112814000403	Non
+9816000001 - Salles blanches Hôpital ROTHSCHILD / SPIE BATIGNOLLES	119816000001	Oui
+9816000002 - Puits Y, RSM, NLF Ligne 15 / Fayat	119816000002	Oui
+9816000004 - Travaux CVCD Phase 1 / Fondation Rothschild	119816000004	Oui
+9816000005 - Réhabilitation du Château de Menars / ADF	119816000005	Oui`;
+
+        // Define manager mapping based on the 4-digit structure code (substring from index 2 to 5)
+        const managerMapping = {
+            'NAVET': ['4433', '9813', '9814'],
+            'HAMIDANE': ['4431', '9815'],
+            'FOUCHER': ['4432', '9812', '9817'],
+            'RICHARDEAU': ['2813', '2814', '9816'],
+            'LE GARREC': ['2651'], /* Corrected LE GARREC for 2651xx (FABKIT) */
+            'BAC': ['4441'], /* Added BAC for 4441xx */
+            // 'Non attribué' will catch any others that don't match
+        };
+
+        // Structure subtitles mapping for display
+        const structureSubtitles = {
+            '4441': '4441',
+            '4431': '4431',
+            '9815': '9815',
+            '4432': '4432',
+            '9812': '9812',
+            '9817': '9817',
+            '4433': '4433',
+            '9813': '9813',
+            '9814': '9814',
+            '2813': '2813',
+            '2814': '2814',
+            '9816': '9816',
+            '2651': '2651 (FABKIT)' /* Updated to match the code and user prompt */
+        };
+
+        // Function to determine the manager based on the budget code's 4-digit structure
+        function getManager(budgetCode) {
+            if (budgetCode.length >= 6) { // Ensure budget code is long enough to extract 4-digit structure
+                const structureId = budgetCode.substring(2, 6);
+                for (const manager in managerMapping) {
+                    if (managerMapping[manager].includes(structureId)) {
+                        return manager;
+                    }
+                }
+            }
+            return 'Non attribué'; // Default if no manager is found or budget code is too short/unmatched
+        }
+
+        // Parse the raw data
+        const lines = rawData.trim().split('\n');
+        const projects = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split('\t');
+            if (parts.length === 3) { // Ensure correct number of columns
+                const originalBudget = parts[1];
+                
+                let actualDossierNumber = '';
+                const chantierPrefixMatch = parts[0].match(/^(\d{3,4})\s*-\s*/); // Match 3 or 4 digits followed by ' - '
+                if (chantierPrefixMatch && chantierPrefixMatch[1]) {
+                    actualDossierNumber = chantierPrefixMatch[1].trim();
+                } else if (parts[0].length > 0) {
+                    actualDossierNumber = parts[0].split(' - ')[0].trim();
+                    const budgetInChantierMatch = actualDossierNumber.match(/^(\d{3,4})\s*$/);
+                    if (budgetInChantierMatch && budgetInChantierMatch[1]) {
+                        actualDossierNumber = budgetInChantierMatch[1];
+                    }
+                }
+
+
+                projects.push({
+                    chantier: parts[0],
+                    budget: originalBudget,
+                    dossierNumber: actualDossierNumber,
+                    publieExtranet: parts[2]
+                });
+            }
+        }
+
+        // Group projects by manager and then by their 4-digit structure ID
+        const groupedData = {};
+
+        projects.forEach(project => {
+            const manager = getManager(project.budget);
+            const structureId = project.budget.length >= 6 ? project.budget.substring(2, 6) : 'N/A'; // Get 4-digit structure ID
+
+            if (!groupedData[manager]) {
+                groupedData[manager] = {
+                    totalProjects: 0,
+                    ouiProjects: 0,
+                    structures: {}
+                };
+            }
+            
+            // Initialize structure if not exists
+            if (!groupedData[manager].structures[structureId]) {
+                groupedData[manager].structures[structureId] = [];
+            }
+            groupedData[manager].structures[structureId].push(project);
+
+            groupedData[manager].totalProjects++;
+            if (project.publieExtranet === 'Oui') {
+                groupedData[manager].ouiProjects++;
+            }
+        });
+
+        const projectListDiv = document.getElementById('project-list');
+        const customTooltip = document.getElementById('custom-tooltip');
+
+        // Sort managers alphabetically, but put 'Non attribué' last
+        const sortedManagers = Object.keys(groupedData).sort((a, b) => {
+            if (a === 'Non attribué') return 1;
+            if (b === 'Non attribué') return -1;
+            return a.localeCompare(b);
+        });
+
+        // Dynamically generate HTML
+        sortedManagers.forEach(manager => {
+            const managerData = groupedData[manager];
+            const managerSection = document.createElement('div');
+            managerSection.classList.add('manager-section');
+            projectListDiv.appendChild(managerSection);
+
+            const managerHeader = document.createElement('div');
+            managerHeader.classList.add('manager-header');
+            
+            // Left group: Arrow + Manager Name
+            const leftGroup = document.createElement('div');
+            leftGroup.classList.add('manager-title-group');
+
+            const arrowSpan = document.createElement('span');
+            arrowSpan.classList.add('arrow');
+            arrowSpan.innerHTML = '&#9660;'; // Down arrow
+
+            const managerNameSpan = document.createElement('span');
+            managerNameSpan.textContent = manager;
+            
+            leftGroup.appendChild(arrowSpan);
+            leftGroup.appendChild(managerNameSpan);
+            managerHeader.appendChild(leftGroup);
+
+            // Right group: Total Projects
+            const totalSpan = document.createElement('span');
+            totalSpan.classList.add('manager-name-total');
+            totalSpan.textContent = `(${managerData.ouiProjects}/${managerData.totalProjects})`;
+            managerHeader.appendChild(totalSpan);
+
+            managerSection.appendChild(managerHeader);
+
+            const managerContent = document.createElement('div');
+            managerContent.classList.add('manager-content');
+            managerSection.appendChild(managerContent);
+
+            // Sort structures within this manager
+            const sortedStructures = Object.keys(managerData.structures).sort();
+
+            sortedStructures.forEach(structureId => {
+                const projectsInStructure = managerData.structures[structureId];
+                if (projectsInStructure.length > 0) {
+                    const structureSubtitle = document.createElement('h3');
+                    structureSubtitle.classList.add('structure-subtitle');
+                    structureSubtitle.textContent = `Structure: ${structureSubtitles[structureId] || structureId}`;
+                    managerContent.appendChild(structureSubtitle);
+
+                    const projectGrid = document.createElement('div');
+                    projectGrid.classList.add('project-grid');
+                    managerContent.appendChild(projectGrid);
+
+                    // Sort projects within this structure
+                    const sortedProjectsInStructure = [...projectsInStructure].sort((a, b) => {
+                        const sA = a.budget.substring(2, 6);
+                        const sB = b.budget.substring(2, 6);
+
+                        const startsWith98A = sA.startsWith('98');
+                        const startsWith98B = sB.startsWith('98');
+
+                        if (!startsWith98A && startsWith98B) return -1;
+                        if (startsWith98A && !startsWith98B) return 1;
+
+                        const numA = parseInt(a.dossierNumber, 10);
+                        const numB = parseInt(b.dossierNumber, 10);
+                        if (!isNaN(numA) && !isNaN(numB)) {
+                            return numA - numB;
+                        }
+                        return a.dossierNumber.localeCompare(b.dossierNumber);
+                    });
+
+                    sortedProjectsInStructure.forEach(project => {
+                        const projectBlock = document.createElement('div');
+                        projectBlock.classList.add('project-block');
+                        projectBlock.classList.add(project.publieExtranet === 'Oui' ? 'oui' : 'non');
+
+                        // Event listeners for custom tooltip
+                        projectBlock.addEventListener('mouseover', (e) => {
+                            customTooltip.textContent = project.chantier;
+                            customTooltip.classList.add('visible');
+                            
+                            // Position the tooltip relative to the hovered block
+                            const rect = projectBlock.getBoundingClientRect();
+                            let tooltipLeft = rect.left + (rect.width / 2);
+                            let tooltipTop = rect.top - customTooltip.offsetHeight - 10; // 10px buffer above block
+
+                            // Adjust if tooltip goes off left edge
+                            if (tooltipLeft - (customTooltip.offsetWidth / 2) < 0) {
+                                tooltipLeft = customTooltip.offsetWidth / 2 + 5; // 5px from left edge
+                            }
+                            // Adjust if tooltip goes off right edge
+                            if (tooltipLeft + (customTooltip.offsetWidth / 2) > window.innerWidth) {
+                                tooltipLeft = window.innerWidth - (customTooltip.offsetWidth / 2) - 5; // 5px from right edge
+                            }
+
+                            customTooltip.style.left = `${tooltipLeft}px`;
+                            customTooltip.style.top = `${tooltipTop}px`;
+                        });
+
+                        projectBlock.addEventListener('mouseout', () => {
+                            customTooltip.classList.remove('visible');
+                        });
+
+                        const projectNumber = document.createElement('span');
+                        projectNumber.classList.add('project-number');
+                        // Always display last 3 digits for all projects
+                        projectNumber.textContent = project.dossierNumber.slice(-3);
+                        projectBlock.appendChild(projectNumber);
+
+                        projectGrid.appendChild(projectBlock);
+                    });
+                }
+            });
+
+            // Accordion toggle functionality
+            managerHeader.addEventListener('click', () => {
+                managerContent.classList.toggle('expanded');
+                managerHeader.querySelector('.arrow').classList.toggle('rotated');
+            });
+        });
+    </script>
+</body>
+</html>

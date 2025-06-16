@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrammes Autocontroles</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Styles personnalisés qui ne peuvent pas être facilement remplacés par Tailwind ou pour des ajustements spécifiques */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            /* Assure que le canvas ne déborde pas et gère sa hauteur automatiquement */
+            max-width: 100%;
+            height: auto !important; /* Important pour Chart.js pour maintenir l'aspect ratio */
+            display: block;
+        }
+        /* Ajustements pour les transitions au survol des conteneurs de graphique */
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        /* Style pour l'icône de l'accordéon */
+        .accordion-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        /* La flèche pointe vers la droite quand le contenu est masqué */
+        .accordion-icon.rotated {
+            transform: rotate(-90deg); /* Rotation pour faire pointer la flèche vers la droite */
+        }
+    </style>
+</head>
+<body class="p-2 bg-gray-100 antialiased">
+    <h1 class="text-2xl font-bold text-center text-gray-800 mb-2 sm:text-3xl">Autocontrôles - Grands Projets</h1>
+    <div class="text-center mb-4 text-sm text-gray-600">
+        <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-1 align-middle"></span> <span class="font-bold">Conforme</span> &nbsp;&nbsp;
+        <span class="inline-block w-3 h-3 bg-red-500 rounded-full mr-1 align-middle"></span> <span class="font-bold">Non conforme</span> &nbsp;&nbsp;
+        <span class="inline-block w-3 h-3 bg-gray-400 rounded-full mr-1 align-middle"></span> <span class="font-bold">Non valorisé</span>
+    </div>
+
+    <div id="structures"></div>
+
+    <script>
+        // Données des projets
+        const projets = [
+            // Projets NAVET
+            { numero: "4433-008", nom: "fusion", conforme: 2149, nonConforme: 160, valorise: 2309, total: 4693 },
+            { numero: "4433-011", nom: "arborea", conforme: 878, nonConforme: 78, valorise: 956, total: 6667 },
+            { numero: "4433-014", nom: "laome", conforme: 1682, nonConforme: 342, valorise: 2024, total: 5441 },
+            { numero: "4433-015", nom: "matera", conforme: 91, nonConforme: 42, valorise: 133, total: 499 },
+            { numero: "4433-020", nom: "arborea elec", conforme: 465, nonConforme: 12, valorise: 477, total: 5028 },
+            { numero: "4433-023", nom: "ecloz", conforme: 2662, nonConforme: 813, valorise: 3475, total: 6230 },
+            { numero: "4433-024", nom: "cours monselet", conforme: 2346, nonConforme: 469, valorise: 2815, total: 7237 },
+            { numero: "4433-025", nom: "fuji A-H", conforme: 0, nonConforme: 0, valorise: 0, total: 14556 },
+            { numero: "4433-026", nom: "fuji K", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4433-027", nom: "carre des officiers", conforme: 47, nonConforme: 72, valorise: 119, total: 149 },
+            { numero: "4433-030", nom: "agates", conforme: 0, nonConforme: 0, valorise: 0, total: 2991 },
+            { numero: "4433-031", nom: "terra silva/stilla", conforme: 1838, nonConforme: 353, valorise: 2191, total: 10882 },
+            { numero: "4433-032", nom: "bois d'angers", conforme: 1174, nonConforme: 244, valorise: 1418, total: 7243 },
+            { numero: "4433-033", nom: "bois d'angers elec", conforme: 0, nonConforme: 0, valorise: 0, total: 2223 },
+            { numero: "4433-034", nom: "chrysalide", conforme: 424, nonConforme: 42, valorise: 466, total: 7373 },
+            { numero: "4433-035", nom: "pitre chevalier", conforme: 0, nonConforme: 0, valorise: 0, total: 4628 },
+            { numero: "4433-038", nom: "amaryllis", conforme: 0, nonConforme: 0, valorise: 0, total: 7296 },
+            { numero: "4433-039", nom: "my campus", conforme: 232, nonConforme: 0, valorise: 232, total: 16958 },
+            { numero: "4433-040", nom: "angora", conforme: 379, nonConforme: 0, valorise: 379, total: 7457 },
+            { numero: "4433-041", nom: "biplan", conforme: 378, nonConforme: 61, valorise: 439, total: 6034 },
+            { numero: "4433-045", nom: "gendarmerie ancenis", conforme: 27, nonConforme: 3, valorise: 30, total: 1364 },
+            { numero: "4433-046", nom: "la cerisaie", conforme: 235, nonConforme: 2, valorise: 237, total: 270 },
+            { numero: "4433-052", nom: "becquerel", conforme: 336, nonConforme: 7, valorise: 343, total: 801 },
+            { numero: "4433-054", nom: "semard", conforme: 0, nonConforme: 0, valorise: 0, total: 13833 },
+            { numero: "4433-055", nom: "semard elec", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4433-057", nom: "ecloz bat D", conforme: 0, nonConforme: 0, valorise: 0, total: 2882 },
+            { numero: "9813-001", nom: "berthauderie", conforme: 42, nonConforme: 9, valorise: 51, total: 1128 },
+            { numero: "9813-002", nom: "penfeld", conforme: 1276, nonConforme: 166, valorise: 1442, total: 10664 },
+            { numero: "9813-005", nom: "JEAN MONNET", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9813-06", nom: "HOTEL MERCURE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9814-002", nom: "confluences", conforme: 0, nonConforme: 0, valorise: 0, total: 6320 },
+            { numero: "9814-003", nom: "esplanades 2", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            // Projets HAMIDANE
+            { numero: "4431-14", nom: "ECLANOVA", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4431-15", nom: "EHPAD LA HOUSSAIS", conforme: 745, nonConforme: 18, valorise: 763, total: 1162 },
+            { numero: "4431-16", nom: "LES NOBELS", conforme: 810, nonConforme: 16, valorise: 826, total: 985 },
+            { numero: "4431-19", nom: "BE GREEN", conforme: 99, nonConforme: 93, valorise: 192, total: 502 },
+            { numero: "4431-20", nom: "CHU NANTES", conforme: 48, nonConforme: 218, valorise: 266, total: 7137 },
+            { numero: "4431-22", nom: "ILOT ADAM", conforme: 4827, nonConforme: 11, valorise: 4838, total: 5584 },
+            { numero: "4431-28", nom: "CHPG MONACO", conforme: 1003, nonConforme: 2928, valorise: 3931, total: 5459 },
+            { numero: "4431-30", nom: "CEBPL - CESSON SEVIGNE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4431-38", nom: "BOUGAINVILLE", conforme: 0, nonConforme: 0, valorise: 0, total: 8 },
+            { numero: "4431-41", nom: "FUJI I-J", conforme: 0, nonConforme: 0, valorise: 0, total: 4538 },
+            { numero: "4431-43", nom: "Roches Rouges Hôtel", conforme: 25, nonConforme: 1, valorise: 26, total: 1046 },
+            { numero: "4431-44", nom: "Mid Buffer", conforme: 18, nonConforme: 0, valorise: 18, total: 18 },
+            { numero: "4431-45", nom: "LA FLEURIAYE", conforme: 56, nonConforme: 1, valorise: 57, total: 201 },
+            { numero: "4431-47", nom: "moulin du bois", conforme: 21, nonConforme: 0, valorise: 21, total: 21 },
+            { numero: "4431-52", nom: "Les Reflets de Loire", conforme: 0, nonConforme: 0, valorise: 0, total: 35 },
+            { numero: "4431-53", nom: "CEBPL ORVAULT", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4431-59", nom: "siege de la SILENE", conforme: 0, nonConforme: 0, valorise: 0, total: 436 },
+            { numero: "4431–62", nom: "ADAGIO", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4431–64", nom: "EPF", conforme: 117, nonConforme: 10, valorise: 127, total: 255 },
+            { numero: "4431–65", nom: "POULIGOU", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4431–67", nom: "AUTOGEREN", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4431–70", nom: "CH CHOLET", conforme: 0, nonConforme: 0, valorise: 0, total: 7 },
+            { numero: "9815-02", nom: "TECHNICENTRE FILS", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9815-03", nom: "CEBPL FLEX2", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9815-04", nom: "RCU", conforme: 4, nonConforme: 1, valorise: 5, total: 75 },
+            { numero: "9815-05", nom: "SIRUS GRENAPIN", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9815-07", nom: "AIRBUS - Extension GC43", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9815-08", nom: "BAINS SUR OUST - salle polyvalente", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            // Projets FOUCHER
+            { numero: "4432-04", nom: "Arborescence (ANGERS)", conforme: 5094, nonConforme: 812, valorise: 5906, total: 7152 },
+            { numero: "4432-06", nom: "Centre aquatique d'Herbignac", conforme: 1293, nonConforme: 110, valorise: 1403, total: 2175 },
+            { numero: "4432-09", nom: "Cabourg", conforme: 494, nonConforme: 63, valorise: 557, total: 1883 },
+            { numero: "4432-14", nom: "JO PARIS 2024", conforme: 259, nonConforme: 16, valorise: 275, total: 276 },
+            { numero: "4432-27", nom: "Piscine de Donges", conforme: 26, nonConforme: 0, valorise: 26, total: 30 },
+            { numero: "4432-31", nom: "Saint-Malo - Grand hôtel de Courtoisville", conforme: 0, nonConforme: 0, valorise: 0, total: 48 },
+            { numero: "4432-36", nom: "Pacé", conforme: 79, nonConforme: 10, valorise: 89, total: 112 },
+            { numero: "4432-38", nom: "AQUABAIE - St-Brieuc", conforme: 27, nonConforme: 0, valorise: 27, total: 28 },
+            { numero: "4432-39", nom: "Piscine Hôtel Les Roches Rouges", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4432-41", nom: "Piscine Bellard", conforme: 87, nonConforme: 0, valorise: 87, total: 105 },
+            { numero: "4432-42", nom: "Caen Montmorency IWA", conforme: 74, nonConforme: 34, valorise: 108, total: 204 },
+            { numero: "4432-43", nom: "Nantes Piscine Dervallières", conforme: 1170, nonConforme: 72, valorise: 1242, total: 1492 },
+            { numero: "4432-44", nom: "Maison Saint Charles - MISSILAC", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4432-48", nom: "Mercure Quiberon", conforme: 1810, nonConforme: 2, valorise: 1812, total: 1941 },
+            { numero: "4432-50", nom: "Océane Machecoul", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "4432-51", nom: "Carquefou", conforme: 0, nonConforme: 0, valorise: 0, total: 155 },
+            { numero: "4432-53", nom: "Chateaubriant", conforme: 4, nonConforme: 0, valorise: 4, total: 419 },
+            { numero: "4432-55", nom: "Lifter - Center Parcs", conforme: 222, nonConforme: 9, valorise: 231, total: 254 },
+            { numero: "4432-58", nom: "Château Landon", conforme: 0, nonConforme: 5, valorise: 5, total: 183 },
+            { numero: "4432-59", nom: "Gouvieux - Aqualis", conforme: 75, nonConforme: 8, valorise: 83, total: 233 },
+            { numero: "4432-61", nom: "Salle des nouelles", conforme: 140, nonConforme: 0, valorise: 140, total: 167 },
+            { numero: "4432-62", nom: "Rennes - Pataugeoire", conforme: 1, nonConforme: 0, valorise: 1, total: 54 },
+            { numero: "9812-03", nom: "OCEABUL - ST JEAN DE MONTS", conforme: 6, nonConforme: 0, valorise: 6, total: 342 },
+            { numero: "9812-04", nom: "Paris - Le Tir", conforme: 0, nonConforme: 0, valorise: 0, total: 2693 },
+            { numero: "9812-05", nom: "VALLONS DE L ERDRE - ST MARS LA JAILLE - Piscine Alexandre Braud", conforme: 0, nonConforme: 0, valorise: 0, total: 115 },
+            { numero: "9812-06", nom: "GLISSEO CHOLET", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9812-08", nom: "VYV3 MAUGES SUR LOIRE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9812-09", nom: "MEDIATHEQUE AVRILLE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9812-10", nom: "LA CRECHE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9812-11", nom: "EFS CENTRE PAYS DE LA LOIRE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9812-12", nom: "RÉSIDENCE RUE DE BRETAGNE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9812-13", nom: "CAUCRIAUVILLE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            // Nouvelle structure RICHARDEAU
+            { numero: "2813-460", nom: "FIMINCO ROMAINVILLE", conforme: 0, nonConforme: 0, valorise: 0, total: 14 },
+            { numero: "2814-384", nom: "IP13 - Désenfumage ZF02 / CHANTIERS MODERNES", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "2814-392", nom: "VANVES L'ECRIN", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "2814-394", nom: "Hôpital Fondation Rothschild phase 0 / SPIE", conforme: 0, nonConforme: 0, valorise: 0, total: 3 },
+            { numero: "2814-395", nom: "Lycée de Sartrouville / Bouygues", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "2814-396", nom: "Piscine de Pompey", conforme: 0, nonConforme: 0, valorise: 0, total: 167 },
+            { numero: "2814-401", nom: "P18 Piscine Belliard / Bouygues", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "2814-403", nom: "Château de Gaillon / Agglo SEINE EURE", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "2814-404", nom: "SAV BOUYGUES 2024 / Bouygues", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9816-01", nom: "Salles blanches Hôpital ROTHSCHILD / SPIE BATIGNOLLES", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9816-02", nom: "Ouvrages Puits Y Ligne 15 / Fayat", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9816-03", nom: "Chantier Divers 2025", conforme: 0, nonConforme: 0, valorise: 0, total: 1 },
+            { numero: "9816-04", nom: "Travaux CVCD Phase 1 / Fondation Rothschild", conforme: 0, nonConforme: 0, valorise: 0, total: 1 }
+        ];
+
+        // Regroupement des projets par structure
+        const structures = {
+            "HAMIDANE - 4431 / 9815": projets.filter(p => p.numero.startsWith("4431") || p.numero.startsWith("9815")),
+            "FOUCHER - 4432 / 9812": projets.filter(p => p.numero.startsWith("4432") || p.numero.startsWith("9812")),
+            "NAVET - 4433 / 9813 / 9814": projets.filter(p => p.numero.startsWith("4433") || p.numero.startsWith("9813") || p.numero.startsWith("9814")),
+            "RICHARDEAU - 2813 / 2814 / 9816": projets.filter(p => p.numero.startsWith("2813") || p.numero.startsWith("2814") || p.numero.startsWith("9816"))
+        };
+
+        const container = document.getElementById('structures');
+        // Calcul de la valeur totale maximale pour l'ajustement de la taille des graphiques
+        const maxTotal = Math.max(...projets.map(p => p.total).filter(t => typeof t === 'number' && !isNaN(t)));
+
+        // Parcourt chaque structure et crée les sections correspondantes
+        Object.entries(structures).forEach(([structureName, groupProjets]) => {
+            const section = document.createElement('div');
+            section.className = 'mb-5'; // Marge en bas pour chaque section de structure
+
+            const titleContainer = document.createElement('div');
+            // Ajout de classes pour rendre le titre cliquable et stylisé comme un bouton accordéon
+            titleContainer.className = 'flex items-center text-base font-bold text-gray-700 mb-2 border-b border-gray-300 pb-1 cursor-pointer select-none';
+
+            const icon = document.createElement('span');
+            // Flèche vers le bas par défaut (contenu affiché)
+            icon.innerHTML = '&#9660;';
+            icon.className = 'accordion-icon mr-2'; // Marge à droite pour séparer de l'icône
+            titleContainer.appendChild(icon);
+
+            // Ajout du texte du titre après l'icône
+            titleContainer.appendChild(document.createTextNode(structureName));
+
+            section.appendChild(titleContainer);
+
+            const chartRow = document.createElement('div');
+            // Utilisation de flexbox pour aligner les graphiques avec espacement et wrap
+            chartRow.className = 'charts-container flex flex-wrap justify-center gap-4 items-stretch'; // Garde la classe pour le JS
+
+            // Ajout de l'écouteur d'événements pour le titre de l'accordéon
+            titleContainer.addEventListener('click', () => {
+                chartRow.classList.toggle('hidden'); // Bascule la visibilité du conteneur de graphiques
+                icon.classList.toggle('rotated'); // Fait pivoter l'icône
+            });
+
+            groupProjets.forEach((projet) => {
+                // S'assure que les valeurs sont numériques, par défaut à 0 si null/undefined
+                const valorise = typeof projet.valorise === 'number' ? projet.valorise : 0;
+                const total = typeof projet.total === 'number' ? projet.total : 0;
+                const conforme = typeof projet.conforme === 'number' ? projet.conforme : 0;
+                const nonConforme = typeof projet.nonConforme === 'number' ? projet.nonConforme : 0;
+
+                const chartDiv = document.createElement('div');
+                // Styles pour le conteneur de chaque graphique
+                chartDiv.className = 'flex flex-col items-center bg-white p-3 rounded-lg shadow-md w-40 min-h-48 box-border text-center transition-all duration-200 ease-in-out';
+
+                const titleElement = document.createElement('div');
+                titleElement.className = 'text-xs font-bold text-gray-700 mb-1'; // Titre du graphique
+                titleElement.textContent = projet.nom.toUpperCase(); // Convertit le nom du projet en majuscules
+
+                const detailsElement = document.createElement('div');
+                detailsElement.className = 'text-xxs text-gray-600 mt-1'; // Informations du graphique
+
+                // Calcul du pourcentage basé sur valorise / total pour l'affichage général
+                let percentageValue = 0;
+                if (total > 0) {
+                    percentageValue = (valorise / total) * 100;
+                }
+                const percentageText = percentageValue.toFixed(1) + '%';
+
+                // Détermination de la couleur du texte en fonction du pourcentage
+                let percentageColorClass = 'text-gray-600'; // Couleur par défaut
+                if (percentageValue >= 0 && percentageValue <= 32.99) {
+                    percentageColorClass = 'text-red-500';
+                } else if (percentageValue >= 33 && percentageValue <= 65.99) {
+                    percentageColorClass = 'text-yellow-500';
+                } else if (percentageValue >= 66 && percentageValue <= 100) {
+                    percentageColorClass = 'text-green-500';
+                }
+
+                detailsElement.innerHTML = `Valorisé : ${valorise}<br>Total : ${total}<br><span class="${percentageColorClass}">(${percentageText})</span>`;
+
+                chartDiv.appendChild(titleElement);
+                chartDiv.appendChild(detailsElement);
+
+                // Crée le graphique uniquement si le total est supérieur à 1 (pour éviter les camemberts avec une seule tranche ou des erreurs)
+                if (total > 1) {
+                    const canvas = document.createElement('canvas');
+                    // Ajuste la taille du canvas en fonction du total du projet par rapport au total maximum
+                    const size = Math.min(160, 60 + (120 * (total / maxTotal)));
+                    canvas.width = size;
+                    canvas.height = size;
+                    chartDiv.appendChild(canvas);
+
+                    const ctx = canvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            // Labels pour les trois sections du camembert
+                            labels: ['Conforme', 'Non conforme', 'Non valorisé'],
+                            datasets: [{
+                                // Données pour les trois sections : conforme, non conforme, et le reste (non valorisé)
+                                data: [conforme, nonConforme, Math.max(total - (conforme + nonConforme), 0)],
+                                // Couleurs : vert pour conforme, rouge pour non conforme, gris pour non valorisé
+                                backgroundColor: ['#2ecc71', '#e74c3c', '#95a5a6'],
+                                borderWidth: 0.5 // Définit le contour blanc à 0
+                            }]
+                        },
+                        options: {
+                            responsive: false, // La taille est gérée par le JS, pas par le responsive de Chart.js
+                            maintainAspectRatio: true, // Maintient l'aspect ratio 1:1
+                            plugins: {
+                                legend: { display: false }, // Cache la légende par défaut de Chart.js
+                                tooltip: {
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed !== null) {
+                                                // Affiche la valeur actuelle et le total pour le tooltip
+                                                const totalSum = context.dataset.data[0] + context.dataset.data[1] + context.dataset.data[2];
+                                                label += context.parsed + ' / ' + totalSum;
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            layout: {
+                                // Ajoute un petit padding autour du graphique pour éviter qu'il ne touche les bords
+                                padding: {
+                                    left: 10,
+                                    right: 10,
+                                    top: 10,
+                                    bottom: 10
+                                }
+                            },
+                            // Active les événements de souris et de toucher pour les interactions
+                            events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove']
+                        }
+                    });
+                }
+                chartRow.appendChild(chartDiv);
+            });
+            section.appendChild(chartRow);
+            container.appendChild(section);
+        });
+    </script>
+</body>
+</html>
