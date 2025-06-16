@@ -210,7 +210,7 @@
 
             months.forEach(month => {
                 const grandProjetsData = parsedData.find(d => d.Date === month && d.Territoire === 'Grands Projets');
-                const totalData = parsedData.find(d => d.Date === month && d.Territoire === 'Total');
+                const totalData = parsedData.find(d => d.Date === month && d.Territoire === 'Groupe');
 
                 if (grandProjetsData && totalData) {
                     let totalValue = totalData[indicator];
@@ -225,7 +225,7 @@
                     processedData[indicator].push({
                         month: month,
                         'Grands Projets': grandProjetsData[indicator],
-                        'Total': totalValue
+                        'Groupe': totalValue
                     });
                 }
             });
