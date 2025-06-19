@@ -449,11 +449,6 @@ BAC MATHIEU 1
             return 'text-gray-800'; // Par défaut (entre 30 et 90 jours)
         }
 
-        /**
-         * Détermine la classe de couleur de fond en fonction de l'ancienneté de la date.
-         * @param {Date} date - La date à évaluer.
-         * @returns {string} La classe CSS Tailwind pour la couleur de fond.
-         */
         function getDateBackgroundColorClass(date) {
             if (!date) return '';
             const today = new Date();
