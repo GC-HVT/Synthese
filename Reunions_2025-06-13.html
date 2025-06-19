@@ -455,7 +455,7 @@ BAC MATHIEU 1
             today.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour une comparaison précise
             const diffTime = Math.abs(today.getTime() - date.getTime());
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+        
             // J'ai ajusté la logique pour qu'elle corresponde aux légendes :
             // Vert: <= 30 jours
             // Jaune: > 30 jours ET <= 90 jours
