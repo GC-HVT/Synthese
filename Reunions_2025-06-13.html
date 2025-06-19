@@ -460,12 +460,12 @@ BAC MATHIEU 1
             // Vert: <= 30 jours
             // Jaune: > 30 jours ET <= 90 jours
             // Rouge: > 90 jours
-            if (diffDays <= 30) {
-                return 'bg-green-100'; // Moins de 30 jours : Fond vert clair
-            } else if (diffDays > 30 && diffDays <= 90) { // Si > 30 et <= 90 jours
+            if (diffDays > 365) {
+                return 'bg-red-100'; // Moins de 30 jours : Fond vert clair
+            } else if (diffDays > 90) { // Si > 30 et <= 90 jours
                 return 'bg-yellow-100'; // Jaune
-            } else if (diffDays > 90) { // Si > 90 jours
-                return 'bg-red-100'; // Rouge
+            } else if (diffDays <= 30) { // Si > 90 jours
+                return 'bg-green-100'; // Rouge
             }
             return ''; // Par défaut, pas de couleur de fond
         }
